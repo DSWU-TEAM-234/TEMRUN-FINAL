@@ -5,8 +5,10 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -32,7 +34,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import com.prolificinteractive.materialcalendarview.BuildConfig
+import com.temrun_finalprojects.breathing.audio.FeedbackTTS
 import com.temrun_finalprojects.data.Song
 import com.temrun_finalprojects.result.ResultActivity
 import kotlinx.coroutines.CoroutineScope
@@ -139,10 +141,23 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val playedTracks = ArrayList<Song>()
     private val bpmList = ArrayList<Int>()
 
-
-
+    // 호흡 피드백
+    private var breathingFeedbackTTS: FeedbackTTS? = null
 
     enum class SensorType { ACCELEROMETER, GYROSCOPE }
+
+    /**
+     * @suppress
+     * */
+
+    private val predictionReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val result = intent?.getStringExtra("result") ?: return
+            Log.d("MainActivity/TTS", "받은 예측 결과: $result")
+
+            breathingFeedbackTTS?.speak(result)
+        }
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -220,6 +235,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if(breath=="1_1"){}
         else if(breath=="2_1"){}
         else{}
+
+        /**
+         * 호흡 피드백 -> tts 으로 내보내기
+         * @see FeedbackTTS
+         *
+         * **/
+        // TTS 인스턴스는 최초 1회만 생성
+        breathingFeedbackTTS = FeedbackTTS(this) {
+            Log.d("MainActivity/TTS", "TTS 초기화 완료")
+        }
 
 
         // 걸음 감지 센서
@@ -690,11 +715,18 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         super.onResume()
         accelerometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }
         gyroscope?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }
+
+        // TTS
+        registerReceiver(predictionReceiver, IntentFilter("PREDICTION_UPDATE"))
+
     }
 
     override fun onPause() {
         super.onPause()
         sensorManager.unregisterListener(this)
+
+        // TTS
+        unregisterReceiver(predictionReceiver)
     }
 
     override fun onDestroy() {
@@ -858,3 +890,4 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
 
 }
+
