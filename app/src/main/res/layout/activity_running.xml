@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="#F9FAFB"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <!-- 상단 러닝 정보 카드 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="16dp"
+        android:background="@drawable/rounded_white_box"
+        >
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView android:src="@drawable/ic_alarm" android:layout_width="24dp" android:layout_height="24dp" />
+            <TextView android:text="3:34" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textStyle="bold" android:textSize="16sp" />
+            <TextView android:text="러닝 시간" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView android:src="@drawable/ic_run" android:layout_width="24dp" android:layout_height="24dp" />
+            <TextView android:text="2.3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textStyle="bold" android:textSize="16sp" />
+            <TextView android:text="거리" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView android:src="@drawable/ic_fire" android:layout_width="24dp" android:layout_height="24dp" />
+            <TextView android:text="130" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textStyle="bold" android:textSize="16sp" />
+            <TextView android:text="칼로리" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 현재 케이던스 + 이펙트 -->
+    <FrameLayout
+        android:id="@+id/cadenceEffectContainer"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="48dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <!-- 퍼지는 이펙트 -->
+        <View
+            android:id="@+id/effectView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:alpha="0"
+            android:background="@drawable/effect_circle" />
+
+        <!-- 가운데 텍스트 묶음 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_gravity="center"> <!-- 이게 꼭 있어야 중앙 고정됨 -->
+
+            <TextView
+                android:id="@+id/cadenceLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="현재 케이던스"
+                android:textSize="14sp"
+                android:textColor="#888888"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/cadenceText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="120"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:textColor="#000000"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="spm"
+                android:textSize="14sp"
+                android:textColor="#888888"
+                android:gravity="center" />
+        </LinearLayout>
+    </FrameLayout>
+
+
+    <LinearLayout
+        android:id="@+id/musicContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="vertical"
+        android:minHeight="200dp">
+
+        <WebView
+            android:id="@+id/webView"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"/>
+
+
+            <LinearLayout
+                    android:id="@+id/playbackControl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnWalk"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="걷는 중" />
+
+                    <Button
+                        android:id="@+id/btnStop"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="정지" />
+
+                    <Button
+                        android:id="@+id/btnAnim"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="재생" />
+
+
+                </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- 일시정지 버튼 -->
+    <ImageButton
+        android:id="@+id/pauseButton"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="5dp"
+        android:background="@null"
+        android:src="@drawable/button"
+        android:contentDescription="pause" />
+
+
+</LinearLayout>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/nav_running" android:icon="@drawable/ic_running_selected" android:title="러닝"/>
+    <item android:id="@+id/nav_game" android:icon="@drawable/ic_game" android:title="게임"/>
+    <item android:id="@+id/nav_record" android:icon="@drawable/ic_record" android:title="기록"/>
+    <item android:id="@+id/nav_settings" android:icon="@drawable/ic_settings" android:title="설정"/>
+    <item android:id="@+id/nav_account" android:icon="@drawable/ic_account" android:title="계정"/>
+
+</menu>

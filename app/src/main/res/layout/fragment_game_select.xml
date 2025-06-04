@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".game.GameSelectFragment"
+    android:id="@+id/gameSelect"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F9FAFB">
+
+    <!-- ✅ 상단 고정 헤더 -->
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="24dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- 러닝 제목 -->
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="게임"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A" />
+
+        <!-- 도움말 아이콘 -->
+        <ImageView
+            android:id="@+id/iv_help"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ri_question_line" />
+    </LinearLayout>
+    <!-- 상단 구분선 -->
+    <View
+        android:id="@+id/header_divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="#D9D9D9"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp" />
+
+
+    <Button
+        android:id="@+id/gameStartButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:backgroundTint="#8CC97F"
+        android:text="게임 시작"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!--희망 케이던스 카드 (중앙 강조 숫자 + +5 / -5 버튼)-->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_cadence"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/header_divider"
+        android:layout_margin="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#FDFDFD"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- 제목 -->
+            <TextView
+                android:id="@+id/tv_cadence_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="케이던스 선택"
+                android:textColor="#000000"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!--            &lt;!&ndash; 설명 &ndash;&gt;-->
+            <!--            <TextView-->
+            <!--                android:id="@+id/tv_cadence_desc"-->
+            <!--                android:layout_width="wrap_content"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:text="노래 BPM 특성상 정확히 희망 케이던스에 맞춰 제공할 수 없습니다."-->
+            <!--                android:textColor="#666666"-->
+            <!--                android:textSize="14sp"-->
+            <!--                android:paddingTop="4dp"-->
+            <!--                android:paddingBottom="16dp" />-->
+
+            <!-- 중앙 숫자 강조 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_cadence_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="150"
+                    android:textColor="#000000"
+                    android:textSize="56sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_cadence_unit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text=" 케이던스"
+                    android:textColor="#000000"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- +5 / -5 버튼 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btn_cadence_plus"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#8CC97F"
+                    android:minHeight="0dp"
+                    android:text="+"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold" />
+
+                <Space
+                    android:layout_width="32dp"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:id="@+id/btn_cadence_minus"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#E0E0E0"
+                    android:minHeight="0dp"
+                    android:text="-"
+                    android:textColor="#000000" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

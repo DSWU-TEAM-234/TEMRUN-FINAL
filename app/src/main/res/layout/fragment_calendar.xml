@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".calendar.CalendarFragment"
+    android:background="@color/Graywhite">
+
+    <!-- ✅ 상단 고정 헤더 -->
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="24dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- 러닝 제목 -->
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="기록"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A" />
+
+        <!-- 도움말 아이콘 -->
+        <ImageView
+            android:id="@+id/iv_help"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ri_question_line" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/header_divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="#D9D9D9"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp" />
+
+    <!-- ✅ 달력 상단 요약 박스 -->
+    <LinearLayout
+        android:id="@+id/calendarSummaryBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintTop_toBottomOf="@+id/header_divider"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- 년도 -->
+        <TextView
+            android:id="@+id/textViewYear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2025"
+            android:textSize="14sp"
+            android:textColor="#4A4A4A" />
+
+        <!-- 월 -->
+        <TextView
+            android:id="@+id/textViewMonth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="06"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- 연두색 박스 -->
+        <LinearLayout
+            android:id="@+id/monthSummaryBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_summary_box"
+            android:orientation="vertical"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginTop="0dp"
+            android:elevation="2dp"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center">
+
+            <!-- "이번 달 분석" -->
+            <TextView
+                android:id="@+id/textViewLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="이번 달 분석"
+                android:textSize="18sp"
+                android:textColor="#1A1A1A"
+                android:gravity="center" />
+
+            <!-- 통계 데이터 -->
+            <TextView
+                android:id="@+id/textViewSummary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="60:45 / 178BPM / 1000kcal"
+                android:textSize="16sp"
+                android:textColor="#45AD5B"
+                android:layout_marginTop="2dp"
+                android:gravity="center" />
+        </LinearLayout> <!-- ✅ monthSummaryBox 닫힘 -->
+    </LinearLayout> <!-- ✅ calendarSummaryBox 닫힘 -->
+
+    <!-- ✅ MaterialCalendarView 추가 -->
+    <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+        android:id="@+id/calendarView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:mcv_showOtherDates="all"
+        app:mcv_selectionColor="@color/Graywhite"
+        app:mcv_tileWidth="48dp"
+        app:mcv_tileHeight="48dp"
+        app:mcv_firstDayOfWeek="monday"
+        app:layout_constraintTop_toBottomOf="@+id/calendarSummaryBox"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
