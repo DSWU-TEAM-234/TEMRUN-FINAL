@@ -733,6 +733,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         cadenceHandler.removeCallbacks(cadenceRunnable)
         tflite?.close()
         super.onDestroy()
+        breathingFeedbackTTS?.destroy() // TTS 자원 해제
     }
 
 
@@ -887,7 +888,5 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
         }
     }
-
-
 }
 
