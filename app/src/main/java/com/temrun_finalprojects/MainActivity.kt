@@ -32,6 +32,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import com.prolificinteractive.materialcalendarview.BuildConfig
 import com.temrun_finalprojects.data.Song
 import com.temrun_finalprojects.result.ResultActivity
 import kotlinx.coroutines.CoroutineScope
@@ -72,7 +73,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     //웹에 토큰 보내는 코드. 노래가 안나오면
     //https://developer.spotify.com/documentation/web-playback-sdk/tutorials/getting-started
     //여기서 토큰 받아와서 바꿔주면 됨
-    private val TOKEN = "BQD3SSpY95MvXw1ouD86X-wM4rFMB5AbphaXCi_BhGFFtdsdWQFxkH0Q3Vxciqndvd7eLqzvqkf7844HToC6VGW24VjIGUih7PFMGMllGnIBBVNtHJkC_uNcwxSLYswYeB5ZBlQlA0TibDciS4mvsEa-Zxj5dbZb5DNjetTu2kdzBaBcwapdiPeJudmsPIm8C_3XLT2koD3-1M4yfopKTyDVvwcNKah7oDvzaJrZsKAHUFnZL2jyQH92ShUG1W2gecUWh_bx"
+    val token = com.temrun_finalprojects.BuildConfig.SPOTIFY_TOKEN
 
     private lateinit var webView: WebView
     private lateinit var cadenceTextView: TextView
@@ -367,7 +368,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             fun onWebReady() {
                 // 웹에서 준비됐다고 알림 > 이때 토큰 보냄
                     webView.post {
-                    webView.evaluateJavascript("window.receiveToken('$TOKEN');", null)
+                    webView.evaluateJavascript("window.receiveToken('$token');", null)
                     give_TrackList(webView)
                 }
             }

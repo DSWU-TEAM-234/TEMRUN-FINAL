@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,9 +8,14 @@ plugins {
     id ("kotlin-kapt")
 }
 
+val properties = Properties().apply {
+    load(FileInputStream(rootProject.file("local.properties")))
+}
+
 android {
     namespace = "com.temrun_finalprojects"
     compileSdk = 35
+
 
     defaultConfig {
         applicationId = "com.temrun_finalprojects"
@@ -17,6 +25,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "SPOTIFY_TOKEN", "\"${properties.getProperty("spotify.token")}\"")
     }
 
     buildTypes {
@@ -38,6 +48,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
