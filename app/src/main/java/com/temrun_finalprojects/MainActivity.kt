@@ -73,6 +73,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     //웹에 토큰 보내는 코드. 노래가 안나오면
     //https://developer.spotify.com/documentation/web-playback-sdk/tutorials/getting-started
     //여기서 토큰 받아와서 바꿔주면 됨
+
+    /**
+     * @author 세희
+     * @see local.properties 파일 들어가서 토큰 변경하기!!!
+     * */
     val token = com.temrun_finalprojects.BuildConfig.SPOTIFY_TOKEN
 
     private lateinit var webView: WebView

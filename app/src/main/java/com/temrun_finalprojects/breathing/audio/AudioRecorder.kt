@@ -10,6 +10,7 @@ import android.os.Handler
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import com.temrun_finalprojects.MainActivity
 import java.io.IOException
 
 class AudioRecorder(private val context: Context) {
@@ -89,10 +90,10 @@ class AudioRecorder(private val context: Context) {
         val bp = intArrayOf(2, 1) // 예시
         val prediction: String = com.temrun_finalprojects.breathing.model.ModelInterpreter.runModel2(context, features, 150, bp)
 
-//        val intent = Intent(context, ResultActivity::class.java)
-//        intent.putExtra("result", prediction)
-//        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // 꼭 필요!
-//        context.startActivity(intent)
+        val intent = Intent(context, MainActivity::class.java)
+        intent.putExtra("result", prediction)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // 꼭 필요!
+        context.startActivity(intent)
 
 
         // TODO: 나중에 모델1, 2 연동할 때의 코드
