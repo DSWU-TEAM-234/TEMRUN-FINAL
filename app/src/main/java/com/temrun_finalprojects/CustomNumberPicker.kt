@@ -1,4 +1,4 @@
-package com.temrun_finalprojects.util
+package com.temrun_finalprojects
 
 import android.content.Context
 import android.graphics.Color

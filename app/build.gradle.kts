@@ -66,8 +66,10 @@ dependencies {
 
     implementation ("org.tensorflow:tensorflow-lite:2.11.0") // 또는 최신 버전
     implementation ("org.tensorflow:tensorflow-lite-gpu:2.11.0") // GPU 가속 (선택 사항)
-//    implementation ("org.tensorflow:tensorflow-lite-support:2.11.0")
+    implementation ("org.tensorflow:tensorflow-lite-support:0.3.1")
     implementation ("org.tensorflow:tensorflow-lite-select-tf-ops:2.11.0") // 중요
+    implementation("be.tarsos.dsp:core:2.5") // 호흡 오디오 특징 추출을 위한 패키지
+
 
     implementation ("com.github.bumptech.glide:glide:4.16.0")
     kapt ("com.github.bumptech.glide:compiler:4.16.0")
