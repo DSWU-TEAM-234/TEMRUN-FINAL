@@ -188,6 +188,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         pauseButton.setOnClickListener {
             webView.evaluateJavascript("window.setMovementState(false);", null)
             isPaused = true
+            stopTimer()
             pauseButton.visibility = View.GONE
             pauseOptions.visibility = View.VISIBLE
         }
@@ -195,6 +196,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         resumeButton.setOnClickListener {
             webView.evaluateJavascript("window.setMovementState(true);", null)
             isPaused = false
+            startTimer()
             pauseOptions.visibility = View.GONE
             pauseButton.visibility = View.VISIBLE
         }
@@ -419,14 +421,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             //노래 끝났을때
             @JavascriptInterface
             fun onTrackEnd() {
-                webView.evaluateJavascript("window.setMovementState(false);", null)
+
                 Log.d("WebSignal", "🎵 트랙이 끝났습니다!")
 
                 //초보자 모드일때
                 val mode = intent.getStringExtra("mode")
                 if(mode == "beginner"){
                     runOnUiThread {
-                        isPaused = true
+                        stopTimer()
 
                         AlertDialog.Builder(this@MainActivity)
                             .setTitle("이번 곡은 어땠나요?")
@@ -435,16 +437,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                                     0 -> { // 힘들어요
                                         currentBpm = currentBpm - 5
                                         requestNewTrackFromServer(currentBpm)
-                                        isPaused = false
                                     }
                                     1 -> { // 괜찮아요
-                                        webView.evaluateJavascript("window.setMovementState(true);", null)
-                                        isPaused = false
                                     }
                                     2 -> { // 더 빠르게
                                         currentBpm = currentBpm + 5
                                         requestNewTrackFromServer(currentBpm)
-                                        isPaused = false
                                     }
                                 }
                             }
@@ -452,6 +450,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                             .show()
                     }
                 }
+
             }
         }, "AndroidInterface")
 
@@ -717,9 +716,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         gyroscope?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }
 
         // TTS
-        registerReceiver(predictionReceiver, IntentFilter("PREDICTION_UPDATE"))
-
+        registerReceiver(predictionReceiver, IntentFilter("PREDICTION_UPDATE"), Context.RECEIVER_NOT_EXPORTED)
     }
+
 
     override fun onPause() {
         super.onPause()
