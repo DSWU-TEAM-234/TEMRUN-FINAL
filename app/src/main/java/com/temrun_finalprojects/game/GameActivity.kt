@@ -5,6 +5,7 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.content.Intent
 import android.content.res.Resources
 import android.graphics.drawable.ClipDrawable
 import android.graphics.drawable.LayerDrawable
@@ -37,6 +38,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.temrun_finalprojects.R
+import com.temrun_finalprojects.result.ResultActivity
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -70,6 +72,17 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
     //판정선 Y값
     private var judgementY = 0
 
+    //점수 시스템
+    private var score = 0
+    private var combo = 0
+    private var maxCombo = 0
+
+    private var perfectCount = 0
+    private var goodCount = 0
+    private var missCount = 0
+
+    private lateinit var scoreText : TextView
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,11 +94,14 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        scoreText = findViewById<TextView>(R.id.scoreText)
+
         //선택화면에서 준 케이던스를 저장
 //        val cadence = intent.getIntExtra("cadence", -1)  // -1은 기본값 (예외 대비)
         //내려오는 바 생성
-        startSpawningBars(bpm = 150)
-        startToneMetronome(150)
+        startSpawningBars(bpm = 130)
+        //startToneMetronome(150)
 
         val guitarView = findViewById<ImageView>(R.id.instrument1)
         val drumView = findViewById<ImageView>(R.id.instrument2)
@@ -94,8 +110,8 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
         instruments = arrayOf(guitarView,drumView,pianoView)
 
 
-        val plusButton = findViewById<Button>(R.id.plusButton)
-        val minusButton = findViewById<Button>(R.id.minusButton)
+//        val plusButton = findViewById<Button>(R.id.plusButton)
+//        val minusButton = findViewById<Button>(R.id.minusButton)
         percentage = 0f
         instrumentNum = 0
 
@@ -117,15 +133,29 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
 
         melody.setOnCompletionListener {
             Log.d("음악", "melody 트랙 종료됨")
-            bit.seekTo(0)
-            base.seekTo(0)
-            code.seekTo(0)
-            melody.seekTo(0)
 
-            bit.start()
-            base.start()
-            code.start()
-            melody.start()
+            // 볼륨 0으로 초기화
+            bit.setVolume(0f, 0f)
+            base.setVolume(0f, 0f)
+            code.setVolume(0f, 0f)
+            melody.setVolume(0f, 0f)
+
+            // 센서 리스너 해제
+            sensorManager.unregisterListener(this)
+
+            //게임 종료 화면으로 이동
+
+            val intent = Intent(this, GameResultActivity::class.java).apply {
+                putExtra("score", score)
+                putExtra("perfect", perfectCount)
+                putExtra("good", goodCount)
+                putExtra("miss", missCount)
+                putExtra("maxCombo", maxCombo)
+            }
+            startActivity(intent)
+
+
+
         }
 
         bit.start()
@@ -138,17 +168,39 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
         isCodeOn = false
         isMelodyOn = false
 
+        //노래 진행바 세팅
+        val progressFill = findViewById<View>(R.id.verticalProgressFill)
+        val container = findViewById<FrameLayout>(R.id.verticalBarContainer)
 
-        //이거 드럼소리로 변환 가능한지 찾아보는중임 드럼소리가 아니면 불협화음됨,,
-        //bit.setVolume(0.5f, 0.5f)
-        plusButton.setOnClickListener {
-            Perfect()
+        val handler = Handler(Looper.getMainLooper())
+        val updateProgressBar = object : Runnable {
+            override fun run() {
+                if (melody.isPlaying) {
+                    val ratio = melody.currentPosition.toFloat() / melody.duration
+                    val fullHeight = container.height
+                    val fillHeight = (fullHeight * ratio).toInt()
 
+                    val params = progressFill.layoutParams
+                    params.height = fillHeight
+                    progressFill.layoutParams = params
+                }
+                handler.postDelayed(this, 100)
+            }
         }
+        handler.post(updateProgressBar)
 
-        minusButton.setOnClickListener {
-            Miss()
-        }
+
+        //드럼 소리 킴
+        bit.setVolume(0.5f, 0.5f)
+
+//        plusButton.setOnClickListener {
+//            Perfect()
+//
+//        }
+//
+//        minusButton.setOnClickListener {
+//            Miss()
+//        }
 
         val judgementLine = findViewById<View>(R.id.judgementLine)
         judgementLine.post {
@@ -189,8 +241,8 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
                 )
 
                 if (detectStep(accel)) { // 적절한 임계값 기반
-                    triggerVibrationAndJudge()  // 디버깅용 진동
-                    println("걸음감ㅈ;")
+                    triggerVibrationAndJudge()
+                    println("걸음감지")
 
                 }
             }
@@ -250,7 +302,10 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
                 if (kotlin.math.abs(targetBar.y - judgementLine.y) < threshold ) {
                     vibrateStrong()
                     Perfect()
-                    showJudgementText("PERFECT")
+                    showJudgementText("PERFECT!!")
+                    showHitEffect(targetBar.y)
+                    scoreText.text= "$score"
+
 
                     // 판정된 바만 제거
                     findViewById<FrameLayout>(R.id.rhythmBarContainer).removeView(targetBar)
@@ -259,7 +314,11 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
                 else if(kotlin.math.abs(targetBar.y - judgementLine.y) < 200 ){
                     vibrateWeak()
                     Good()
-                    showJudgementText("Good")
+                    showJudgementText("Good!")
+                    showHitEffect(targetBar.y)
+                    scoreText.text= "$score"
+
+
 
                     // 판정된 바만 제거
                     findViewById<FrameLayout>(R.id.rhythmBarContainer).removeView(targetBar)
@@ -268,7 +327,8 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
                 else {
                     // ❌ 판정 실패
                     Miss()
-                    showJudgementText("MISS")
+                    showJudgementText("MISS..")
+                    scoreText.text= "$score"
                 }
             }
 
@@ -276,6 +336,43 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
 
 
     }
+
+    fun showHitEffect(y: Float) {
+        val context = this
+        val rhythmZone = findViewById<FrameLayout>(R.id.rhythmBarContainer)
+
+        val effectView = View(context).apply {
+            layoutParams = FrameLayout.LayoutParams(200.dpToPx(), 24.dpToPx()).apply {
+                topMargin = y.toInt()
+                leftMargin = (rhythmZone.width - 200.dpToPx()) / 2 // 중앙 정렬
+            }
+            background = ContextCompat.getDrawable(context, R.drawable.hit_effect_bg)
+            alpha = 1f
+            scaleX = 1f
+            scaleY = 1f
+        }
+
+        rhythmZone.addView(effectView)
+
+        val scaleX = ObjectAnimator.ofFloat(effectView, View.SCALE_X, 1f, 1.8f)
+        val scaleY = ObjectAnimator.ofFloat(effectView, View.SCALE_Y, 1f, 1.8f)
+        val fadeOut = ObjectAnimator.ofFloat(effectView, View.ALPHA, 1f, 0f)
+
+        val animatorSet = AnimatorSet().apply {
+            playTogether(scaleX, scaleY, fadeOut)
+            duration = 300
+            interpolator = LinearInterpolator()
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    rhythmZone.removeView(effectView)
+                }
+            })
+        }
+
+        animatorSet.start()
+    }
+
+
 
     private fun showJudgementText(text: String) {
         val judgementTextView = findViewById<TextView>(R.id.judgementText)
@@ -285,11 +382,16 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
         // 일정 시간 후 자동으로 사라지게
         Handler(Looper.getMainLooper()).postDelayed({
             judgementTextView.visibility = View.GONE
-        }, 800) // 800ms 후 사라짐
+        }, 1000) // 800ms 후 사라짐
     }
 
 
     fun Miss(){
+
+        //콤보 초기화
+        combo = 0
+        missCount += 1
+
         // MISS 판정일 때 20퍼씩 감소
         percentage -= 0.2f
         if (percentage < 0f) {
@@ -333,6 +435,14 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
     }
 
     fun Perfect(){
+        //콤보, 점수 계산
+        combo += 1
+        if (combo > maxCombo) maxCombo = combo
+        perfectCount += 1
+
+        val multiplier = getComboMultiplier(combo)
+        score += (100 * multiplier).toInt()
+
         //게이지가 다 차면 다음 악기로 이동
         if(percentage >= 1.0f && instrumentNum<2) {
             instrumentNum += 1
@@ -372,6 +482,15 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
 
 
     fun Good(){
+
+        //콤보 점수 계산
+        combo += 1
+        if (combo > maxCombo) maxCombo = combo
+        goodCount += 1
+
+        val multiplier = getComboMultiplier(combo)
+        score += (70 * multiplier).toInt()
+
         //게이지가 다 차면 다음 악기로 이동
         if(percentage >= 1.0f && instrumentNum<2) {
             instrumentNum += 1
@@ -620,6 +739,12 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
         return MediaPlayer.create(this, resId).apply {
             isLooping = false
         }
+    }
+
+
+    //콤보 보너스 계산함수
+    fun getComboMultiplier(combo: Int): Float {
+        return 1.0f + (combo / 100f)  // 예: 콤보 10이면 1.1배
     }
 
 

@@ -27,79 +27,125 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="horizontal"
-            android:padding="12dp">
+            android:padding="10dp">
 
             <!-- 시간 / 거리 / 칼로리 등 기존 내용들 -->
             ...
-
-            <!-- 시간 -->
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/score"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
+                android:text="Score"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_margin="10dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0:00"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="러닝 시간"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <!-- 거리 -->
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/scoreText"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
+                android:layout_weight="0"
+                android:text="0"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_margin="10dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0.0"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="거리"
-                    android:textSize="12sp" />
-            </LinearLayout>
+            <!--            &lt;!&ndash; 시간 &ndash;&gt;-->
+<!--            <LinearLayout-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="1"-->
+<!--                android:gravity="center"-->
+<!--                android:orientation="vertical">-->
 
-            <!-- 칼로리 -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
+<!--                <TextView-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="0:00"-->
+<!--                    android:textSize="16sp"-->
+<!--                    android:textStyle="bold" />-->
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+<!--                <TextView-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="러닝 시간"-->
+<!--                    android:textSize="12sp" />-->
+<!--            </LinearLayout>-->
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="칼로리"
-                    android:textSize="12sp" />
-            </LinearLayout>
+<!--            &lt;!&ndash; 거리 &ndash;&gt;-->
+<!--            <LinearLayout-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="1"-->
+<!--                android:gravity="center"-->
+<!--                android:orientation="vertical">-->
+
+<!--                <TextView-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="0.0"-->
+<!--                    android:textSize="16sp"-->
+<!--                    android:textStyle="bold" />-->
+
+<!--                <TextView-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="거리"-->
+<!--                    android:textSize="12sp" />-->
+<!--            </LinearLayout>-->
+
+<!--            &lt;!&ndash; 칼로리 &ndash;&gt;-->
+<!--            <LinearLayout-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="1"-->
+<!--                android:gravity="center"-->
+<!--                android:orientation="vertical">-->
+
+<!--                <TextView-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="0"-->
+<!--                    android:textSize="16sp"-->
+<!--                    android:textStyle="bold" />-->
+
+<!--                <TextView-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="칼로리"-->
+<!--                    android:textSize="12sp" />-->
+<!--            </LinearLayout>-->
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
+
+    <!-- 진행바 -->
+    <FrameLayout
+        android:id="@+id/verticalBarContainer"
+        android:layout_width="10dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="0dp"
+        app:layout_constraintTop_toBottomOf="@id/topInfoContainer"
+        app:layout_constraintBottom_toTopOf="@id/bottomGuide"
+        app:layout_constraintStart_toStartOf="parent"
+        android:elevation="10dp">
+
+        <!-- 배경 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#E0E0E0" />
+
+        <!-- 진행 바 -->
+        <View
+            android:id="@+id/verticalProgressFill"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="bottom"
+            android:background="#8CC97F" />
+    </FrameLayout>
 
     <!-- 게임 전체 루트 -->
     <FrameLayout
@@ -145,8 +191,8 @@
 
 
 
-        </FrameLayout>
 
+        </FrameLayout>
 
 
         <!-- 판정 텍스트 -->
@@ -154,12 +200,13 @@
             android:id="@+id/judgementText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="PERFECT"
+            android:text="PERFECT!!"
             android:textSize="24sp"
             android:textStyle="bold"
             android:layout_gravity="center_horizontal|bottom"
-            android:layout_marginBottom="96dp"
-            android:visibility="gone" />
+            android:layout_marginBottom="200dp"
+            android:visibility="gone"
+            />
 
         <!-- 하단 악기 슬롯 + 게이지 -->
         <LinearLayout
@@ -180,7 +227,7 @@
                 android:id="@+id/instrument1"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:layout_margin="8dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/guitar_gauge"
                 android:scaleType="fitCenter" />
 
@@ -196,29 +243,37 @@
             <!-- 악기 3 -->
             <ImageView
                 android:id="@+id/instrument3"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="59dp"
+                android:layout_height="59dp"
                 android:layout_marginHorizontal="24dp"
                 android:layout_marginStart="24dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/piano_gauge" />
 
-            <Button
-                android:id="@+id/plusButton"
-                android:layout_width="56dp"
-                android:layout_height="wrap_content"
-                android:text="Plus" />
+<!--            <Button-->
+<!--                android:id="@+id/plusButton"-->
+<!--                android:layout_width="56dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="Plus" />-->
 
-            <Button
-                android:id="@+id/minusButton"
-                android:layout_width="wrap_content"
-                android:layout_height="73dp"
-                android:text="Minus" />
+<!--            <Button-->
+<!--                android:id="@+id/minusButton"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="73dp"-->
+<!--                android:text="Minus" />-->
 
 
         </LinearLayout>
 
 
     </FrameLayout>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/bottomGuide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_end="114dp" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
