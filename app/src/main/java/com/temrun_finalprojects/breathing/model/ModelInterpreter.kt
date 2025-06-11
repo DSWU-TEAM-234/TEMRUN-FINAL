@@ -86,7 +86,7 @@ object ModelInterpreter {
 
         val tflite = Interpreter(
             com.temrun_finalprojects.util.FileUtil.loadModelFile(
-                context!!, "model2_lite_v1.tflite"
+                context!!, "model2_lite_v2.tflite"
             )
         )
 
