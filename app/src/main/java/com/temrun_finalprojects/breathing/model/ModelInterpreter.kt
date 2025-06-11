@@ -9,6 +9,77 @@ import java.io.IOException
 
 object ModelInterpreter {
     private const val TAG = "ModelInterpreter"
+    private var abnormalCount = 0 // 비정상 감지 횟수
+    private const val ABNORMAL_THRESHOLD = 5 // 비정상 임계값
+
+    // 모델1 관련 정규화 상수 (MainActivity.kt에서 가져옴)
+    private val metaMean = floatArrayOf(150.76959248f, 2.01040182f)
+    private val metaStd = floatArrayOf(10.08731071f, 0.81218989f)
+
+    // 호흡 패턴 매핑
+    private val patternMap = mapOf(
+        "1:1" to 1f,
+        "2:1" to 2f,
+        "2:2" to 3f
+    )
+
+    @Throws(IOException::class)
+    fun runModel1(context: Context?, features: AudioProcessor.FeatureSet, bpm: Int, pattern: String): String {
+        Log.d(TAG, "Model 1 시작")
+
+        val tflite = Interpreter(
+            com.temrun_finalprojects.util.FileUtil.loadModelFile(
+                context!!, "cnn_mlp_breath_model_v1.tflite"
+            )
+        )
+
+        Log.d(TAG, "Model 1 로드 완료")
+
+        // CNN 입력 형태로 재구성: (1, 128, 128, 1)
+        val cnnInput = Array(1) { Array(128) { Array(128) { FloatArray(1) } } }
+        val flatLogmel = features.logMelSpectrogram
+
+        for (i in 0 until 128) {
+            for (j in 0 until 128) {
+                val idx = i * 128 + j
+                cnnInput[0][i][j][0] = flatLogmel[idx]
+            }
+        }
+
+        // 메타 데이터 정규화
+        val bpmFloat = bpm.toFloat()
+        val patternCode = patternMap[pattern] ?: 0f
+        val normBpm = (bpmFloat - metaMean[0]) / metaStd[0]
+        val normPattern = (patternCode - metaMean[1]) / metaStd[1]
+        val mlpInput = arrayOf(floatArrayOf(normBpm, normPattern))
+
+        // 모델 추론
+        val output = Array(1) { FloatArray(1) }
+        tflite.runForMultipleInputsOutputs(arrayOf(cnnInput, mlpInput), mapOf(0 to output))
+
+        val result = output[0][0]
+        val prediction = if (result < 0.5) "정상" else "비정상"
+
+        // 비정상 카운트 관리
+        if (prediction == "비정상") {
+            abnormalCount++
+            Log.d(TAG, "비정상 감지 횟수: $abnormalCount")
+        } else {
+            abnormalCount = 0 // 정상이면 카운트 리셋
+        }
+
+        Log.d(TAG, "Model 1 실행 완료. 결과: $prediction")
+        return prediction
+    }
+
+    fun shouldUseModel2(): Boolean {
+        return abnormalCount >= ABNORMAL_THRESHOLD
+    }
+
+    fun resetAbnormalCount() {
+        abnormalCount = 0
+    }
+
     @Throws(IOException::class)
     fun runModel2(context: Context?, features: AudioProcessor.FeatureSet, bpm: Int, bp: IntArray): String {
         Log.d(com.temrun_finalprojects.breathing.model.ModelInterpreter.TAG, "Model 2 시작")
