@@ -69,6 +69,8 @@ dependencies {
     implementation ("org.tensorflow:tensorflow-lite-support:0.3.1")
     implementation ("org.tensorflow:tensorflow-lite-select-tf-ops:2.11.0") // 중요
     implementation("be.tarsos.dsp:core:2.5") // 호흡 오디오 특징 추출을 위한 패키지
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("com.github.wendykierp:JTransforms:3.1")
 
 
     implementation ("com.github.bumptech.glide:glide:4.16.0")

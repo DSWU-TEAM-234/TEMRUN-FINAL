@@ -11,10 +11,25 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import com.temrun_finalprojects.MainActivity
+import com.temrun_finalprojects.breathing.model.ModelInterpreter
 import java.io.IOException
 
 class AudioRecorder(private val context: Context) {
     private val handler = Handler()
+
+    // 사용자 설정값 저장 변수 추가
+    /**
+     * TODO: 사용자 UI랑 연결해야한다.
+     * */
+    private var userBpm: Int = 150
+    private var userPattern: String = "2:1"
+    private var userBreathingPattern: IntArray = intArrayOf(2, 1)
+
+    fun setUserSettings(bpm: Int, pattern: String, breathingPattern: IntArray) {
+        this.userBpm = bpm
+        this.userPattern = pattern
+        this.userBreathingPattern = breathingPattern
+    }
 
     fun startRecording() {
         // 🔐 권한 체크
@@ -84,27 +99,38 @@ class AudioRecorder(private val context: Context) {
     private fun processAudio(audioData: FloatArray) {
         val features: AudioProcessor.FeatureSet = AudioProcessor.extractFeatures(audioData)
 
-        //        String prediction = ModelInterpreter.runModel1(context, features);
+        var finalPrediction: String = ""
 
-        // TODO: 사용자가 실제로 선택하는 호흡 패턴의 값을 가져와서 여기다가 넣어야한다.
-        val bp = intArrayOf(2, 1) // 예시
-        val prediction: String = com.temrun_finalprojects.breathing.model.ModelInterpreter.runModel2(context, features, 150, bp)
+        // Model1과 Model2 순차 실행 로직
+        if (!ModelInterpreter.shouldUseModel2()) {
+            // Model1 먼저 실행
+            val model1Result = ModelInterpreter.runModel1(context, features, userBpm, userPattern)
 
+            if (model1Result == "정상") {
+                Log.e("Model1", "정상 호흡 패턴")
+//                finalPrediction = "정상 호흡 패턴입니다."
+            } else {
+                // 비정상이면 임계값 확인
+                if (ModelInterpreter.shouldUseModel2()) {
+                    // 비정상이 5번 이상이면 Model2 실행
+                    finalPrediction = ModelInterpreter.runModel2(context, features, userBpm, userBreathingPattern)
+                    ModelInterpreter.resetAbnormalCount() // Model2 실행 후 카운트 리셋
+                } else {
+//                    finalPrediction = "호흡 패턴에 주의가 필요합니다."
+                }
+            }
+        } else {
+            // 이미 임계값을 넘었으면 바로 Model2 실행
+            finalPrediction = ModelInterpreter.runModel2(context, features, userBpm, userBreathingPattern)
+        }
+
+        // 결과 브로드캐스트
         val intent = Intent("PREDICTION_UPDATE")
-        intent.putExtra("result", prediction)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // 꼭 필요!
+        intent.putExtra("result", finalPrediction)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.sendBroadcast(intent)
 
-
-        // TODO: 나중에 모델1, 2 연동할 때의 코드
-        // 현재 5/28일 기준 -> 모델2만 일단 돌아가는지 확인하기
-//        if ("비정상".equals(prediction)) {
-//            String result = ModelInterpreter.runModel2(context, features);
-//            Intent intent = new Intent(context, ResultActivity.class);
-//            intent.putExtra("result", result);
-//            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // 꼭 필요!
-//            context.startActivity(intent);
-//        }
+        Log.d("AudioRecorder", "최종 예측 결과: $finalPrediction")
     }
 
     companion object {
