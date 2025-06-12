@@ -18,9 +18,9 @@ object ModelInterpreter {
 
     // 호흡 패턴 매핑
     private val patternMap = mapOf(
-        "1:1" to 1f,
-        "2:1" to 2f,
-        "2:2" to 3f
+        "1_1" to 1f,
+        "2_1" to 2f,
+        "2_2" to 3f
     )
 
     @Throws(IOException::class)
