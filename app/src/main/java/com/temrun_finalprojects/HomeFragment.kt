@@ -105,7 +105,6 @@ class HomeFragment : Fragment() {
                 btns_mode[1].currentTextColor == Color.WHITE -> "beginner"
                 else -> "normal" // 기본값
             }
-
             val selectedBreath = when {
                 btns_breath[0].currentTextColor == Color.WHITE -> "1_1"
                 btns_breath[1].currentTextColor == Color.WHITE -> "2_1"
@@ -113,6 +112,17 @@ class HomeFragment : Fragment() {
                 else -> "1_1" // 기본값
             }
 
+            var selectedBreathPattern = getBreathingPattern(selectedBreath)
+
+            // TODO: 직접 모델에 값 넘기기
+            recorder?.setUserSettings(cadence, selectedBreath, selectedBreathPattern)
+            Log.d("Selected_breathing_pattern_selectedBreath", "bpm: $cadence")
+            Log.d("Selected_breathing_pattern_selectedBreath", "설정 패턴(ver 모델1): $selectedBreath")
+            Log.d("Selected_breathing_pattern_selectedBreath",
+                "설정 패턴(ver 모델2): " + selectedBreathPattern.joinToString(", ", "[", "]")
+            )
+
+//            Log.d("Pattern", selectedBreathPattern.joinToString(", ", "[", "]"))
             // 오디오 리코딩 시작
             recorder?.startRecording()
 
@@ -129,6 +139,16 @@ class HomeFragment : Fragment() {
 
         return view
     }
+
+    private fun getBreathingPattern(selectedBreath: String): IntArray {
+        return when (selectedBreath) {
+            "1_1" -> intArrayOf(1, 1)
+            "2_1" -> intArrayOf(2, 1)
+            "2_2" -> intArrayOf(2, 2)
+            else -> intArrayOf(0, 0)
+        }
+    }
+
 
     private fun styleSelectedTextOnly(picker: NumberPicker) {
         picker.post {
