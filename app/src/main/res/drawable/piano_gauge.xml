@@ -1,0 +1,19 @@
+<!-- res/drawable/guitar_gauge.xml -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 회색 실루엣 배경 -->
+    <item android:id="@android:id/background">
+        <bitmap
+            android:src="@drawable/piano_outline"
+            android:gravity="center" />
+    </item>
+
+    <!-- 초록색 게이지 (ClipDrawable로 잘림) -->
+    <item android:id="@android:id/progress">
+        <clip
+            android:drawable="@drawable/piano_filled"
+            android:clipOrientation="vertical"
+            android:gravity="bottom" />
+    </item>
+
+</layer-list>

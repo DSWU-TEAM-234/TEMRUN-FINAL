@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="Graywhite">#FFF9FAFB</color>
+    <color name="G_white">#F8F8F8</color>
+    <color name="G_dark_gray">#959595</color>
+    <color name="temrun_blue">#159DFF</color>
+    <color name="temrun_yellow">#EDF669</color>
+
+</resources>

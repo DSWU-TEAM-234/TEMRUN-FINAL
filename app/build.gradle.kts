@@ -1,0 +1,84 @@
+import org.gradle.kotlin.dsl.implementation
+import java.util.Properties
+import java.io.FileInputStream
+
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    id ("kotlin-parcelize")
+    id ("kotlin-kapt")
+}
+
+val properties = Properties().apply {
+    load(FileInputStream(rootProject.file("local.properties")))
+}
+
+android {
+    namespace = "com.temrun_finalprojects"
+    compileSdk = 35
+
+
+    defaultConfig {
+        applicationId = "com.temrun_finalprojects"
+        minSdk = 24
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "SPOTIFY_TOKEN", "\"${properties.getProperty("spotify.token")}\"")
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+
+    buildFeatures {
+        viewBinding = true
+        buildConfig = true
+    }
+}
+
+dependencies {
+
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+
+    implementation ("org.tensorflow:tensorflow-lite:2.11.0") // 또는 최신 버전
+    implementation ("org.tensorflow:tensorflow-lite-gpu:2.11.0") // GPU 가속 (선택 사항)
+    implementation ("org.tensorflow:tensorflow-lite-support:0.3.1")
+    implementation ("org.tensorflow:tensorflow-lite-select-tf-ops:2.11.0") // 중요
+    implementation("be.tarsos.dsp:core:2.5") // 호흡 오디오 특징 추출을 위한 패키지
+
+
+    implementation ("com.github.bumptech.glide:glide:4.16.0")
+    kapt ("com.github.bumptech.glide:compiler:4.16.0")
+
+    //기록(캘린더) 작성을 위한 MaterialCalendarView 관련된 의존성 추가
+    implementation("com.prolificinteractive:material-calendarview:1.4.3")
+
+    implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")// 그래프 그리기
+
+
+}

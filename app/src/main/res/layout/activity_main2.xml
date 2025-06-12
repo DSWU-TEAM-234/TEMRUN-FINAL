@@ -1,0 +1,313 @@
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainLayout2"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/Graywhite"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    >
+
+    <!-- 상단 고정 헤더 -->
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="24dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- 러닝 제목 -->
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="러닝중"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A" />
+
+        <!-- 도움말 아이콘 -->
+        <ImageView
+            android:id="@+id/iv_help"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ri_question_line" />
+    </LinearLayout>
+
+    <!-- 상단 구분선 -->
+    <View
+        android:id="@+id/header_divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="#D9D9D9"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp" />
+
+    <!-- 상단 원형 카드 -->
+    <FrameLayout
+        android:id="@+id/circleStats"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:layout_gravity="center"
+        android:layout_margin="40dp"
+        android:background="@drawable/running_background"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/header"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        >
+
+        <!-- 퍼지는 링 애니메이션 View -->
+        <ImageView
+            android:id="@+id/ringEffect"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/ring"
+            android:scaleType="center"
+            android:alpha="0.0" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:baselineAligned="true"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <TextView
+                android:layout_marginTop="12dp"
+                android:id="@+id/distance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="달린 거리"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                android:letterSpacing="0.07"
+                android:includeFontPadding="false"/>
+
+            <TextView
+                android:id="@+id/distanceText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.07"
+                android:text="0.0"
+                android:textColor="@android:color/white"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="0dp"
+                android:lineSpacingMultiplier="1"/>
+
+            <TextView
+                android:id="@+id/distanceUnit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="km"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:includeFontPadding="false"/>
+
+            <TextView
+                android:id="@+id/time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="달린 시간"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                android:letterSpacing="0.07"
+                android:includeFontPadding="false"
+                android:layout_marginTop="6dp"/>
+            <TextView
+                android:id="@+id/timeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:00:00"
+                android:textColor="@android:color/white"
+                android:textSize="20sp"
+                android:letterSpacing="0.07"
+                android:includeFontPadding="false"
+                android:layout_marginBottom="6dp"/>
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <!-- 일시정지 버튼 (초기 표시됨) -->
+                <ImageButton
+                    android:id="@+id/pauseButton"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:src="@drawable/button"
+                    android:background="@null"
+                    android:contentDescription="pause" />
+
+                <!-- 일시정지 후 보여줄 버튼 그룹 (처음엔 안보임) -->
+                <LinearLayout
+                    android:id="@+id/pauseOptions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    android:gravity="center"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
+
+                    <ImageButton
+                        android:id="@+id/resumeButton"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:src="@drawable/play_button"
+                        android:background="@null"
+                        android:contentDescription="resume" />
+
+                    <Space android:layout_width="5dp" android:layout_height="match_parent" />
+
+                    <ImageButton
+                        android:id="@+id/endButton"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:src="@drawable/stop_button"
+                        android:background="@null"
+                        android:contentDescription="end" />
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <!--        android:background="@drawable/running"-->
+<!--        app:layout_constraintWidth_percent="0.5"/>-->
+
+    <!-- 하단 두 박스를 감싸는 부모 레이아웃 -->
+    <LinearLayout
+        android:id="@+id/bottomStatsContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="30dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/circleStats"
+        app:layout_constraintWidth_percent="0.5">
+
+        <!-- 왼쪽 하단 박스 (평균 케이던스) -->
+        <!-- 평균 케이던스 박스 -->
+        <LinearLayout
+            android:id="@+id/cadenceBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/ic_box"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/TextAvg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="예측 케이던스"
+                android:textColor="#666"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/TextAvgNum"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="---"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="spm"
+                android:textSize="12sp" />
+
+            <!-- 텍스트들 추가 -->
+        </LinearLayout>
+
+        <!-- 소비 칼로리 박스 -->
+        <LinearLayout
+            android:id="@+id/calorieBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/ic_box"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="소비 칼로리"
+                android:textColor="#666"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/calorieText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="kcal"
+                android:textSize="12sp" />
+            <!-- 텍스트들 추가 -->
+        </LinearLayout>
+    </LinearLayout>
+
+
+
+    <!-- 하단 노래 재생 웹뷰 -->
+    <LinearLayout
+        android:id="@+id/musicContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bottomStatsContainer"
+        app:layout_constraintWidth_percent="0.5"
+        android:minHeight="300dp">
+
+        <!-- 중간에 WebView만 포함 -->
+
+        <WebView
+            android:id="@+id/webView"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_weight="1" />
+
+        <LinearLayout
+            android:id="@+id/playbackControl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"/>
+
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

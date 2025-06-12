@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 선택된 항목 (굵게) -->
+    <style name="BottomNavTextActive" parent="TextAppearance.AppCompat.Caption">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 선택되지 않은 항목도 굵게 -->
+    <style name="BottomNavTextInactive" parent="TextAppearance.AppCompat.Caption">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+</resources>

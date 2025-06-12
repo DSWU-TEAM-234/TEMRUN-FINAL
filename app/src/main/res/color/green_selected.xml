@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="#8CC97F" android:state_checked="true"/>
+    <item android:color="#F1F1F1"/> <!-- off 상태 thumb 색상(예시) -->
+</selector>
