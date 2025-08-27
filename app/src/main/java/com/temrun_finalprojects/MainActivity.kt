@@ -29,6 +29,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -156,6 +157,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             Log.d("MainActivity/TTS", "받은 예측 결과: $result")
 
             breathingFeedbackTTS?.speak(result)
+
+            val breathFrame = findViewById<FrameLayout>(R.id.breathFrame)
+
+            //시각적 피드백
+            if (result.isNotEmpty()) {
+                breathFrame.setBackgroundResource(R.drawable.ic_breath_red)
+            } else {
+                breathFrame.setBackgroundResource(R.drawable.ic_breath_green)
+            }
         }
     }
 
@@ -177,12 +187,46 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         initRingPool(ringContainer)
 //        startPulsingRings(150)
 
+
         // 버튼 연결
         val pauseButton : ImageButton = findViewById(R.id.pauseButton)
         val pauseOptions : LinearLayout = findViewById(R.id.pauseOptions)
         val resumeButton : ImageButton= findViewById(R.id.resumeButton)
         val endButton : ImageButton= findViewById(R.id.endButton)
-        val debugButton : Button= findViewById(R.id.btnDebug)
+//        val debugButton : Button= findViewById(R.id.btnDebug)
+
+
+
+//        // 디버그용 버튼 찾기
+//        val btnBreathNormal = findViewById<Button>(R.id.btn_test_breath_normal)
+//        val btnBreathAbnormal = findViewById<Button>(R.id.btn_test_breath_abnormal)
+//        val btnCadenceNormal = findViewById<Button>(R.id.btn_test_cadence_normal)
+//        val btnCadenceAbnormal = findViewById<Button>(R.id.btn_test_cadence_abnormal)
+//
+//        // 호흡 테스트
+//        btnBreathNormal.setOnClickListener {
+//            val intent = Intent("PREDICTION_UPDATE")
+//            intent.putExtra("result", "")  // 정상
+//            intent.setPackage(this@MainActivity.packageName)
+//            sendBroadcast(intent)
+//        }
+//
+//        btnBreathAbnormal.setOnClickListener {
+//            val intent = Intent("PREDICTION_UPDATE")
+//            intent.putExtra("result", "비정상")  // 비정상
+//            intent.setPackage(this@MainActivity.packageName)
+//            sendBroadcast(intent)
+//        }
+//
+//        // 케이던스 테스트
+//        btnCadenceNormal.setOnClickListener {
+//            findViewById<FrameLayout>(R.id.cadenceFrame).setBackgroundResource(R.drawable.ic_cadence_green)
+//        }
+//
+//        btnCadenceAbnormal.setOnClickListener {
+//            findViewById<FrameLayout>(R.id.cadenceFrame).setBackgroundResource(R.drawable.ic_cadence_red)
+//        }
+
 
 
         pauseButton.setOnClickListener {
@@ -213,11 +257,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             startActivity(intent)
         }
 
-        debugButton.setOnClickListener{
-            //케이던스피드백!!!!! 피드백 필요할 때 아래 함수가져다가 쓰세요!!!!
-            requestVibrationFeedback()
-            showCadenceFeedbackToast(this)
-        }
+//        debugButton.setOnClickListener{
+//            //케이던스피드백 피드백 필요할 때 아래 함수가져다가 쓰세요
+//            requestVibrationFeedback()
+//            showCadenceFeedbackToast(this)
+//        }
 
         //모드, 시간 선택화면에서 가져옴
         val mode = intent.getStringExtra("mode")
@@ -233,10 +277,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             //노래 끝나면 선택창 띄우기등...
         }
 
-        //호흡!!! 이거 참고하시길!!!!
-        if(breath=="1_1"){}
-        else if(breath=="2_1"){}
-        else{}
 
         /**
          * 호흡 피드백 -> tts 으로 내보내기
@@ -701,6 +741,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
                     runOnUiThread {
                         cadenceTextView.text = "$finalPrediction"
+
+                        val bpmDiff = kotlin.math.abs(finalPrediction - currentBpm)
+                        val cadenceFrame = findViewById<FrameLayout>(R.id.cadenceFrame)
+
+                        //시각적 피드백
+                        if (bpmDiff >= 5) {
+                            cadenceFrame.setBackgroundResource(R.drawable.ic_cadence_red)
+                        } else {
+                            cadenceFrame.setBackgroundResource(R.drawable.ic_cadence_green)
+                        }
                     }
                 }
 
@@ -710,6 +760,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onResume() {
         super.onResume()
         accelerometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }

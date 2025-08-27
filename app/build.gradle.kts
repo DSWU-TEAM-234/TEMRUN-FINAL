@@ -79,5 +79,9 @@ dependencies {
     //기록(캘린더) 작성을 위한 MaterialCalendarView 관련된 의존성 추가
     implementation("com.prolificinteractive:material-calendarview:1.4.3")
 
+    implementation("androidx.core:core-splashscreen:1.0.0")
+    implementation("androidx.browser:browser:1.5.0")
+    implementation ("com.squareup.okhttp3:okhttp:4.12.0")
+
 
 }
