@@ -91,8 +91,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var tflite: Interpreter? = null
 
     //케이던스 모델 관련
-    private val modelName = "model_0528_5s.tflite"      //모델 파일명
-    private val windowSizeMillis = 5000L                // 예측에 사용할 윈도우 크기: 4초
+    private val modelName = "model_0826_5s.tflite"      //모델 파일명
+    private val windowSizeMillis = 5000L                // 예측에 사용할 윈도우 크기
     private val slideIntervalMillis = 1000L
     private val sensorBuffer = mutableListOf<Triple<Long, SensorType, FloatArray>>()
     private val kalmanFilters = mutableMapOf<String, KalmanFilter1D>() // 칼만 필터 저장용

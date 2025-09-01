@@ -49,6 +49,7 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        dataBinding = true
     }
 }
 
@@ -83,5 +84,6 @@ dependencies {
     implementation("androidx.browser:browser:1.5.0")
     implementation ("com.squareup.okhttp3:okhttp:4.12.0")
 
+    implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")// 그래프 그리기
 
 }
