@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.implementation
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -85,5 +86,10 @@ dependencies {
     implementation ("com.squareup.okhttp3:okhttp:4.12.0")
 
     implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")// 그래프 그리기
+
+    implementation ("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation ("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.14")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
 }

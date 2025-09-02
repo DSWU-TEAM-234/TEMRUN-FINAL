@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.temrun_finalprojects.R
+import com.temrun_finalprojects.result.RunningResultBottomSheet
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -33,7 +34,7 @@ class SessionActivity : AppCompatActivity() {
         setContentView(R.layout.activity_session)
 
         // 툴바 설정
-        val toolbar = findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar)
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         toolbar.setNavigationOnClickListener { onBackPressed() }
@@ -60,7 +61,7 @@ class SessionActivity : AppCompatActivity() {
         }
 
         // RecyclerView 초기화
-        sessionAdapter = SessionAdapter()
+        sessionAdapter = SessionAdapter(this)
         rvSessions.layoutManager = LinearLayoutManager(this)
         rvSessions.adapter = sessionAdapter
 
@@ -112,7 +113,7 @@ class SessionActivity : AppCompatActivity() {
             list.add(
                 SessionRecord(
                     "랜덤 기록",
-                    "${random.nextInt(23).toString().padStart(2, '0')}:${random.nextInt(60).toString().padStart(2,'0')}",
+                    "${random.nextInt(23).toString().padStart(2, '0')}:${random.nextInt(60).toString().padStart(2, '0')}",
                     rndTime(),
                     rndBpm(),
                     rndCal()
@@ -122,7 +123,7 @@ class SessionActivity : AppCompatActivity() {
         return list
     }
 
-    private class SessionAdapter :
+    private class SessionAdapter(private val activity: AppCompatActivity) :
         RecyclerView.Adapter<SessionAdapter.SessionViewHolder>() {
 
         private var records: List<SessionRecord> = emptyList()
@@ -148,6 +149,12 @@ class SessionActivity : AppCompatActivity() {
             holder.duration.text = record.duration
             holder.avgBpm.text = record.avgBpm.toString()
             holder.calories.text = record.calories.toString()
+
+            // 각 세션 클릭 시 상세 기록 보기 BottomSheet 연결
+            holder.itemView.setOnClickListener {
+                val bottomSheet = RunningResultBottomSheet()
+                bottomSheet.show(activity.supportFragmentManager, "RunningResultBottomSheet")
+            }
         }
 
         override fun getItemCount(): Int = records.size
