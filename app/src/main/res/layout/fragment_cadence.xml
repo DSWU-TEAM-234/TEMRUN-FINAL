@@ -45,7 +45,7 @@
                 android:gravity="center"
                 android:orientation="horizontal">
 
-                <!-- 전체 정답률 -->
+                <!-- 정확도 -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -56,7 +56,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="전체 정답률"
+                        android:text="정확도"
                         android:textColor="@color/black"
                         android:textSize="12sp" />
 
@@ -64,7 +64,7 @@
                         android:id="@+id/textCadenceAccuracy"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="0%"
+                        android:text="±0 spm"
                         android:textColor="@color/black"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -95,7 +95,7 @@
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <!-- 정확도 -->
+                <!-- 달린 거리 -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -106,7 +106,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="정확도"
+                        android:text="달린 거리"
                         android:textColor="@color/black"
                         android:textSize="12sp" />
 
@@ -114,7 +114,7 @@
                         android:id="@+id/textCadencePrecision"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="±0 spm"
+                        android:text="0 km"
                         android:textColor="@color/black"
                         android:textSize="16sp"
                         android:textStyle="bold" />

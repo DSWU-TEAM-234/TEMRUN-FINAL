@@ -93,7 +93,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var targetCadence = 160  // 목표 케이던스 (러닝 시작 시 설정값)
 
     //케이던스 모델 관련
-    private val modelName = "model_0826_5s.tflite"      //모델 파일명
+    private val modelName = "model_0811_5s.tflite"      //모델 파일명
     private val windowSizeMillis = 5000L                // 예측에 사용할 윈도우 크기
     private val slideIntervalMillis = 1000L
     private val sensorBuffer = mutableListOf<Triple<Long, SensorType, FloatArray>>()
