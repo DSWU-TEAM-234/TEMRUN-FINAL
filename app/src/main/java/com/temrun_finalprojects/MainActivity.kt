@@ -89,6 +89,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var accelerometer: Sensor? = null
     private var gyroscope: Sensor? = null
     private var tflite: Interpreter? = null
+    private val cadenceDataList = mutableListOf<Int>()  // 실시간 케이던스 데이터 저장
+    private var targetCadence = 160  // 목표 케이던스 (러닝 시작 시 설정값)
 
     //케이던스 모델 관련
     private val modelName = "model_0826_5s.tflite"      //모델 파일명
@@ -250,10 +252,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             webView.evaluateJavascript("window.setMovementState(false);", null)
             val intent = Intent(this, ResultActivity::class.java)
             intent.putParcelableArrayListExtra("songs", playedTracks)
-            intent.putExtra("time",elapsedSeconds)
-            intent.putExtra("calorie",calorie)
-            intent.putExtra("distance",distance)
+            intent.putExtra("time", elapsedSeconds)
+            intent.putExtra("calorie", calorie)
+            intent.putExtra("distance", distance)
             intent.putExtra("averageBPM", bpmList.average().toInt())
+
+            // 목표 케이던스와 실시간 케이던스 데이터 전달
+            intent.putExtra("targetCadence", targetCadence)
+            intent.putIntegerArrayListExtra("cadenceDataList", ArrayList(cadenceDataList))
+
             startActivity(intent)
         }
 
@@ -267,6 +274,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val mode = intent.getStringExtra("mode")
         val time = intent.getIntExtra("time", 0)
         val breath = intent.getStringExtra("breath")
+        targetCadence = intent.getIntExtra("cadence", 160)
 
         //모드
         if(mode == "normal"){
@@ -741,6 +749,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
                     runOnUiThread {
                         cadenceTextView.text = "$finalPrediction"
+
+                        // 실시간 케이던스 데이터를 리스트에 저장
+                        if (!isPaused) {
+                            cadenceDataList.add(finalPrediction)
+                        }
 
                         val bpmDiff = kotlin.math.abs(finalPrediction - currentBpm)
                         val cadenceFrame = findViewById<FrameLayout>(R.id.cadenceFrame)

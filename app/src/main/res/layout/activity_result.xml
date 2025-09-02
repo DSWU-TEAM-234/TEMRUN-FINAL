@@ -246,12 +246,20 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
+
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
                         android:text="케이던스"
                         android:textStyle="bold" />
+
+                    <com.github.mikephil.charting.charts.LineChart
+                        android:id="@+id/chartCadence"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp" />
+
 
                     <!--                    <ImageView-->
                     <!--                        android:layout_width="match_parent"-->

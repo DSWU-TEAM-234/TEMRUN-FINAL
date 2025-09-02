@@ -9,14 +9,24 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.bumptech.glide.Glide
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.LimitLine
+import com.github.mikephil.charting.components.YAxis
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
 import com.temrun_finalprojects.R
 import com.temrun_finalprojects.RootActivity
 import com.temrun_finalprojects.data.Song
 
 class ResultActivity: AppCompatActivity() {
+
+    private lateinit var cadenceChart: LineChart
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -36,7 +46,6 @@ class ResultActivity: AppCompatActivity() {
 //        )
 
         val receivedSongs = intent.getParcelableArrayListExtra<Song>("songs") ?: arrayListOf()
-
 
         for (song in receivedSongs)
         {
@@ -61,6 +70,10 @@ class ResultActivity: AppCompatActivity() {
         val distance = intent.getFloatExtra("distance", 0f)
         val averageBPM = intent.getIntExtra("averageBPM", 0)
 
+        // 러닝 시작 시 선택한 목표 케이던스와 실시간 케이던스 데이터 받기
+        val targetCadence = intent.getIntExtra("targetCadence", 160)
+        val cadenceDataList = intent.getIntegerArrayListExtra("cadenceDataList") ?: arrayListOf()
+
         val hours = time / 3600
         val minutes = (time % 3600) / 60
         val seconds = time % 60
@@ -69,6 +82,9 @@ class ResultActivity: AppCompatActivity() {
         findViewById<TextView>(R.id.ResultTimeText).text = timeFormatted
         findViewById<TextView>(R.id.ResultBPMText).text =  averageBPM.toString()
         findViewById<TextView>(R.id.ResultCalorieText).text = calorie.toString()
+
+        // 케이던스 차트 초기화 및 설정
+        setupCadenceChart(targetCadence, cadenceDataList)
 
         val resultConfirmButton : Button = findViewById(R.id.resultConfirmButton)
 
@@ -81,4 +97,69 @@ class ResultActivity: AppCompatActivity() {
         }
     }
 
+    private fun setupCadenceChart(targetCadence: Int, cadenceDataList: List<Int>) {
+        cadenceChart = findViewById(R.id.chartCadence)
+
+        // 실시간 케이던스 데이터를 그래프 엔트리로 변환
+        val entries = mutableListOf<Entry>()
+        cadenceDataList.forEachIndexed { index, cadence ->
+            entries.add(Entry(index.toFloat(), cadence.toFloat()))
+        }
+
+        // 실시간 케이던스 라인 데이터셋 생성
+        val dataSet = LineDataSet(entries, "실시간 케이던스").apply {
+            color = ContextCompat.getColor(this@ResultActivity, R.color.teal_700)
+            lineWidth = 2f
+            setDrawCircles(true)
+            circleRadius = 3f
+            setCircleColor(ContextCompat.getColor(this@ResultActivity, R.color.teal_700))
+            mode = LineDataSet.Mode.LINEAR
+            setDrawValues(false)
+        }
+
+        // 차트에 데이터 설정
+        cadenceChart.data = LineData(dataSet)
+
+        // Y축 설정
+        val leftAxis: YAxis = cadenceChart.axisLeft
+        leftAxis.axisMinimum = 0f
+        leftAxis.axisMaximum = 220f
+        leftAxis.setDrawGridLines(true)
+        leftAxis.gridColor = ContextCompat.getColor(this, R.color.light_gray)
+
+        // 목표 케이던스 직선 추가
+        val targetLimitLine = LimitLine(targetCadence.toFloat(), "목표 케이던스 ($targetCadence)").apply {
+            lineWidth = 4f
+            lineColor = ContextCompat.getColor(this@ResultActivity, R.color.purple_500)
+            textColor = ContextCompat.getColor(this@ResultActivity, R.color.purple_500)
+            textSize = 12f
+            labelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
+        }
+        leftAxis.addLimitLine(targetLimitLine)
+
+        // 오른쪽 Y축 비활성화
+        cadenceChart.axisRight.isEnabled = false
+
+        // X축 설정
+        cadenceChart.xAxis.apply {
+            setDrawGridLines(true)
+            setAvoidFirstLastClipping(true)
+            granularity = 1f
+            gridColor = ContextCompat.getColor(this@ResultActivity, R.color.light_gray)
+        }
+
+        // 차트 전체 설정
+        cadenceChart.apply {
+            description.isEnabled = false
+            legend.isEnabled = true
+            setTouchEnabled(true)
+            isDragEnabled = true
+            setScaleEnabled(true)
+            setPinchZoom(true)
+            animateX(1000)
+        }
+
+        // 차트 새로고침
+        cadenceChart.invalidate()
+    }
 }
