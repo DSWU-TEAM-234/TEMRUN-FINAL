@@ -8,8 +8,10 @@ import com.temrun_finalprojects.RootActivity
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.FormBody
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
@@ -48,6 +50,7 @@ class AuthRedirectActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         val code = intent?.data?.getQueryParameter("code")
+
         if (code != null) {
             val codeVerifier = getSharedPreferences(PREFS, MODE_PRIVATE)
                 .getString("code_verifier", null)
@@ -63,6 +66,8 @@ class AuthRedirectActivity : AppCompatActivity() {
     }
 
     private fun requestAccessToken(code: String, codeVerifier: String) {
+        val client = OkHttpClient()
+
         val formBody = FormBody.Builder()
             .add("client_id", CLIENT_ID)
             .add("grant_type", "authorization_code")

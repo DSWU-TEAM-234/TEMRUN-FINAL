@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
+import com.temrun_finalprojects.breathing.audio.AudioRecorder
 
 class HomeFragment : Fragment() {
 
@@ -18,6 +19,9 @@ class HomeFragment : Fragment() {
     private lateinit var btns_mode: List<Button>
     private var cadenceValue = 180
     private var total = 0
+
+    private var recorder: AudioRecorder? = null
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -90,6 +94,8 @@ class HomeFragment : Fragment() {
             }
         }
 
+        recorder = AudioRecorder(requireContext())
+
         val btnConfirm = view.findViewById<Button>(R.id.btn_start_running)
         btnConfirm.setOnClickListener {
             val cadence = cadenceValue
@@ -107,7 +113,8 @@ class HomeFragment : Fragment() {
                 else -> "1_1" // 기본값
             }
 
-
+            // 오디오 리코딩 시작
+            recorder?.startRecording()
 
             // MainActivity로 이동 (bpm 값,모드,시간만 넘김)
             val intent = Intent(this.context, MainActivity::class.java)
