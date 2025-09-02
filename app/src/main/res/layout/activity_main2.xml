@@ -9,6 +9,21 @@
     android:clipToPadding="false"
     >
 
+    <!-- 👇 모든 UI 뒤쪽 배경 레이어 (가장 먼저 선언해서 뒤에서 그려지게) -->
+    <FrameLayout
+        android:id="@+id/rippleHost"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clickable="false"
+        android:focusable="false"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+
     <!-- 상단 고정 헤더 -->
     <LinearLayout
         android:id="@+id/header"
@@ -59,86 +74,89 @@
         android:layout_width="250dp"
         android:layout_height="250dp"
         android:layout_gravity="center"
-        android:layout_margin="40dp"
+        android:layout_margin="80dp"
         android:background="@drawable/running_background"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/header"
         android:clipChildren="false"
         android:clipToPadding="false"
-        >
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/header">
 
-        <!-- 퍼지는 링 애니메이션 View -->
-        <ImageView
-            android:id="@+id/ringEffect"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:src="@drawable/ring"
-            android:scaleType="center"
-            android:alpha="0.0" />
+        <!--        &lt;!&ndash; 퍼지는 링 애니메이션 (RippleBackground) &ndash;&gt;-->
+        <!--        <com.skyfishjy.library.RippleBackground-->
+        <!--            android:id="@+id/stepRipple"-->
+        <!--            android:layout_width="match_parent"-->
+        <!--            android:layout_height="match_parent"-->
+        <!--            android:elevation="8dp"-->
+        <!--            app:rb_color="#7AA66B"-->
+        <!--            app:rb_radius="250dp"-->
+        <!--            app:rb_rippleAmount="1"-->
+        <!--            app:rb_duration="800"-->
+        <!--            app:rb_scale="10" />-->
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="vertical"
             android:baselineAligned="true"
             android:clipChildren="false"
-            android:clipToPadding="false">
+            android:clipToPadding="false"
+            android:gravity="center"
+            android:orientation="vertical">
 
             <TextView
-                android:layout_marginTop="12dp"
                 android:id="@+id/distance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:includeFontPadding="false"
+                android:letterSpacing="0.07"
                 android:text="달린 거리"
                 android:textColor="@android:color/white"
-                android:textSize="12sp"
-                android:letterSpacing="0.07"
-                android:includeFontPadding="false"/>
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/distanceText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:includeFontPadding="false"
                 android:letterSpacing="0.07"
+                android:lineSpacingExtra="0dp"
+                android:lineSpacingMultiplier="1"
                 android:text="0.0"
                 android:textColor="@android:color/white"
                 android:textSize="40sp"
-                android:textStyle="bold"
-                android:includeFontPadding="false"
-                android:lineSpacingExtra="0dp"
-                android:lineSpacingMultiplier="1"/>
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/distanceUnit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:includeFontPadding="false"
                 android:text="km"
                 android:textColor="@android:color/white"
-                android:textSize="14sp"
-                android:includeFontPadding="false"/>
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:includeFontPadding="false"
+                android:letterSpacing="0.07"
                 android:text="달린 시간"
                 android:textColor="@android:color/white"
-                android:textSize="12sp"
-                android:letterSpacing="0.07"
-                android:includeFontPadding="false"
-                android:layout_marginTop="6dp"/>
+                android:textSize="12sp" />
+
             <TextView
                 android:id="@+id/timeText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:includeFontPadding="false"
+                android:letterSpacing="0.07"
                 android:text="00:00:00"
                 android:textColor="@android:color/white"
-                android:textSize="20sp"
-                android:letterSpacing="0.07"
-                android:includeFontPadding="false"
-                android:layout_marginBottom="6dp"/>
+                android:textSize="20sp" />
 
             <FrameLayout
                 android:layout_width="wrap_content"
@@ -152,38 +170,40 @@
                     android:id="@+id/pauseButton"
                     android:layout_width="72dp"
                     android:layout_height="72dp"
-                    android:src="@drawable/button"
                     android:background="@null"
-                    android:contentDescription="pause" />
+                    android:contentDescription="pause"
+                    android:src="@drawable/button" />
 
                 <!-- 일시정지 후 보여줄 버튼 그룹 (처음엔 안보임) -->
                 <LinearLayout
                     android:id="@+id/pauseOptions"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:visibility="gone"
-                    android:gravity="center"
                     android:clipChildren="false"
-                    android:clipToPadding="false">
+                    android:clipToPadding="false"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
 
                     <ImageButton
                         android:id="@+id/resumeButton"
                         android:layout_width="72dp"
                         android:layout_height="72dp"
-                        android:src="@drawable/play_button"
                         android:background="@null"
-                        android:contentDescription="resume" />
+                        android:contentDescription="resume"
+                        android:src="@drawable/play_button" />
 
-                    <Space android:layout_width="5dp" android:layout_height="match_parent" />
+                    <Space
+                        android:layout_width="5dp"
+                        android:layout_height="match_parent" />
 
                     <ImageButton
                         android:id="@+id/endButton"
                         android:layout_width="72dp"
                         android:layout_height="72dp"
-                        android:src="@drawable/stop_button"
                         android:background="@null"
-                        android:contentDescription="end" />
+                        android:contentDescription="end"
+                        android:src="@drawable/stop_button" />
                 </LinearLayout>
             </FrameLayout>
         </LinearLayout>
@@ -195,12 +215,13 @@
     <!-- 하단 두 박스를 감싸는 부모 레이아웃 -->
     <LinearLayout
         android:id="@+id/bottomStatsContainer"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginHorizontal="37dp"
+        android:layout_marginTop="80dp"
         android:gravity="center"
         android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/BC_box"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/circleStats"
@@ -210,7 +231,7 @@
         <!-- 평균 케이던스 박스 -->
         <LinearLayout
             android:id="@+id/cadenceBox"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
@@ -246,7 +267,7 @@
         <!-- 소비 칼로리 박스 -->
         <LinearLayout
             android:id="@+id/calorieBox"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
@@ -279,6 +300,36 @@
     </LinearLayout>
 
 
+    <LinearLayout
+        android:id="@+id/BC_box"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/musicContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bottomStatsContainer">
+
+        <FrameLayout
+            android:id="@+id/cadenceFrame"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/ic_cadence_green"
+            android:layout_marginBottom="5dp">
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/breathFrame"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/ic_breath_red">
+
+        </FrameLayout>
+
+    </LinearLayout>
+
 
     <!-- 하단 노래 재생 웹뷰 -->
     <LinearLayout
@@ -290,7 +341,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/bottomStatsContainer"
+        app:layout_constraintTop_toBottomOf="@+id/BC_box"
         app:layout_constraintWidth_percent="0.5"
         android:minHeight="300dp">
 
@@ -302,21 +353,61 @@
             android:layout_height="150dp"
             android:layout_weight="1" />
 
-        <LinearLayout
-            android:id="@+id/playbackControl"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnDebug"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="케이던스 피드백 발생" />
-
-
-        </LinearLayout>
-
     </LinearLayout>
+<!--    <LinearLayout-->
+<!--        android:id="@+id/playbackControl"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:gravity="center"-->
+<!--        android:orientation="vertical">-->
+
+        <!--            <Button-->
+        <!--                android:id="@+id/btnDebug"-->
+        <!--                android:layout_width="wrap_content"-->
+        <!--                android:layout_height="wrap_content"-->
+        <!--                android:text="케이던스 피드백 발생" />-->
+<!--        <LinearLayout-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:orientation="horizontal">-->
+
+<!--            <Button-->
+<!--                android:id="@+id/btn_test_breath_normal"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="호흡 정상 테스트"-->
+<!--                android:layout_margin="8dp" />-->
+
+<!--            <Button-->
+<!--                android:id="@+id/btn_test_breath_abnormal"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="호흡 비정상 테스트"-->
+<!--                android:layout_margin="8dp" />-->
+
+<!--        </LinearLayout>-->
+
+<!--        <LinearLayout-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:orientation="horizontal">-->
+<!--            <Button-->
+<!--                android:id="@+id/btn_test_cadence_normal"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="케이던스 정상 테스트"-->
+<!--                android:layout_margin="8dp" />-->
+
+<!--            <Button-->
+<!--                android:id="@+id/btn_test_cadence_abnormal"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="케이던스 비정상 테스트"-->
+<!--                android:layout_margin="8dp" />-->
+<!--        </LinearLayout>-->
+
+
+
+<!--    </LinearLayout>-->
+
 </androidx.constraintlayout.widget.ConstraintLayout>
