@@ -48,6 +48,12 @@ class RootActivity : AppCompatActivity() {
                         .commit()
                     true
                 }
+                R.id.nav_account -> {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragmentContainer, MyPageFragment())
+                        .commit()
+                    true
+                }
                 else -> false
             }
         }

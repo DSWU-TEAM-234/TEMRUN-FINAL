@@ -76,4 +76,12 @@ dependencies {
     implementation("com.prolificinteractive:material-calendarview:1.4.3")
 
 
+    implementation("androidx.core:core-splashscreen:1.0.0")
+    implementation("androidx.browser:browser:1.5.0")
+    implementation ("com.squareup.okhttp3:okhttp:4.12.0")
+
+    //러닝탭 애니메이션을 위한 의존성
+    implementation ("com.skyfishjy.ripplebackground:library:1.0.1")
+
+
 }
