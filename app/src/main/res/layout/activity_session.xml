@@ -1,50 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/sessionRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#F5F5F5">
 
-    <!-- 상단 헤더 -->
-    <LinearLayout
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="16dp"
-        android:background="#FFFFFF">
+        android:layout_height="?attr/actionBarSize"
+        android:background="#FFFFFF"
+        app:navigationIcon="@drawable/ic_back"
+        app:title="기록"
+        app:titleCentered="true" />
 
-        <ImageButton
-            android:id="@+id/buttonBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_back"
-            android:background="?attr/selectableItemBackgroundBorderless" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="기록"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#000000"
-            android:gravity="center" />
-
-        <ImageView
-            android:id="@+id/iv_help"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ri_question_line" />
-    </LinearLayout>
-
-    <!-- 선택 날짜 -->
     <TextView
         android:id="@+id/tvSelectedDate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="8dp"
+        android:paddingTop="12dp"
         android:paddingBottom="16dp"
         android:text="2월 23일"
         android:gravity="center"
@@ -52,7 +28,24 @@
         android:textStyle="bold"
         android:textColor="#111111" />
 
-    <!-- 러닝 세션 목록 -->
+    <TextView
+        android:id="@+id/tvEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="등록된 러닝 기록이 없어요."
+        android:textColor="#666666"
+        android:gravity="center"
+        android:padding="16dp"
+        android:visibility="gone" />
+
+    <ProgressBar
+        android:id="@+id/progress"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:visibility="gone" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvSessions"
         android:layout_width="match_parent"
@@ -60,6 +53,7 @@
         android:layout_weight="1"
         android:clipToPadding="false"
         android:paddingStart="16dp"
-        android:paddingEnd="16dp" />
-
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp"
+        android:scrollbars="vertical" />
 </LinearLayout>
