@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.temrun_finalprojects.databinding.FragmentRunningResultBinding
+import java.util.concurrent.TimeUnit
 
 class RunningResultBottomSheet : BottomSheetDialogFragment() {
 
@@ -23,13 +24,23 @@ class RunningResultBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // viewPager 어댑터 연결
-        binding.viewPager.adapter = ResultPagerAdapter(this)
+        arguments?.let { args ->
+            // 1) 상단 제목에 runId 표시
+            val runIdLabel = args.getString("runId")?.takeLast(4)?.let { "러닝 $it" }
+            binding.tvTitle.text = runIdLabel
 
-        // AI 피드백 텍스트 설정 (나중에 서버로부터 받아오는 구조로 바꿔도 됨)
-        // binding.textFeedback1.text = "페이스가 안정적으로 유지되고 있습니다."
-        // binding.textFeedback2.text = "호흡을 적절히 유지하고 있습니다."
-        // binding.textFeedback3.text = "다음 목표: 6km 달성에 도전해보세요."
+            // 2) 요약 카드뷰에 총 러닝 시간, 평균 BPM, 칼로리 설정
+            val durationSec = args.getLong("totalDuration")
+            val minutes = TimeUnit.SECONDS.toMinutes(durationSec)
+            val seconds = durationSec % 60
+            binding.textViewTime.text = String.format("%d:%02d", minutes, seconds)
+
+            binding.textViewBpm.text = args.getInt("averageBpm").toString()
+            binding.textViewCalorie.text = args.getInt("totalCalories").toString()
+        }
+
+        // ViewPager 어댑터 연결
+        binding.viewPager.adapter = ResultPagerAdapter(this)
     }
 
     override fun onDestroyView() {

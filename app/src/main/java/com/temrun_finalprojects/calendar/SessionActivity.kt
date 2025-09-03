@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.temrun_finalprojects.R
+import com.temrun_finalprojects.result.RunningResultBottomSheet
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -36,7 +37,7 @@ interface RunsApiService {
     ): List<RunSession>
 }
 
-class SessionActivity : AppCompatActivity() {
+class SessionActivity : AppCompatActivity(), SessionAdapter.OnSessionClickListener {
 
     companion object {
         const val EXTRA_DATE = "extra_date"
@@ -62,7 +63,7 @@ class SessionActivity : AppCompatActivity() {
         rvSessions = findViewById(R.id.rvSessions)
 
         // RecyclerView setup
-        adapter = SessionAdapter()
+        adapter = SessionAdapter(this)
         rvSessions.layoutManager = LinearLayoutManager(this)
         rvSessions.adapter = adapter
 
@@ -117,5 +118,18 @@ class SessionActivity : AppCompatActivity() {
                 e.printStackTrace()
             }
         }
+    }
+
+    override fun onSessionClick(session: RunSession) {
+        val bottomSheet = RunningResultBottomSheet().apply {
+            arguments = Bundle().apply {
+                putString("runId", session.runId)
+                putLong("totalDuration", session.totalDuration)
+                putInt("averageBpm", session.averageBpm)
+                putInt("totalCalories", session.totalCalories)
+                putString("startTime", session.startTime)
+            }
+        }
+        bottomSheet.show(supportFragmentManager, "RunningResult")
     }
 }
