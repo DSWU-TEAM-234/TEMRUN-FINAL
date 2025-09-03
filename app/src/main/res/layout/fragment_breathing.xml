@@ -69,6 +69,17 @@
                         android:textColor="@color/black" />
                 </LinearLayout>
 
+                <!-- 중앙 콜론 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=":"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    android:layout_marginHorizontal="8dp"
+                    android:gravity="center" />
+
                 <!-- 비정상 비율 -->
                 <LinearLayout
                     android:layout_width="0dp"

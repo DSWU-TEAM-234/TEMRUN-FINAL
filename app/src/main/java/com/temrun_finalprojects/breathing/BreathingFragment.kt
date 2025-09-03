@@ -55,8 +55,8 @@ class BreathingFragment : Fragment(R.layout.fragment_breathing) {
             // 2) 정상 : 비정상 호흡 비율 텍스트로 표시
             val normal = d.breathNormalAcc
             val abnormal = d.breathAbnormalAcc
-            tvPatternNormal.text = "정상 $normal"
-            tvPatternAbnormal.text = "비정상 $abnormal"
+            tvPatternNormal.text = "$normal"
+            tvPatternAbnormal.text = "$abnormal"
         }
     }
 }
