@@ -54,6 +54,8 @@ import java.util.concurrent.Executors
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
+import com.temrun_finalprojects.data.BreathResultCount
+
 
 // 칼만 필터 클래스 정의
 class KalmanFilter1D(
@@ -91,8 +93,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var tflite: Interpreter? = null
 
     //케이던스 모델 관련
-    private val modelName = "model_0528_5s.tflite"      //모델 파일명
-    private val windowSizeMillis = 5000L                // 예측에 사용할 윈도우 크기: 4초
+    private val modelName = "model_0811_5s.tflite"      //모델 파일명
+    private val windowSizeMillis = 3000L                // 예측에 사용할 윈도우 크기: 4초
     private val slideIntervalMillis = 1000L
     private val sensorBuffer = mutableListOf<Triple<Long, SensorType, FloatArray>>()
     private val kalmanFilters = mutableMapOf<String, KalmanFilter1D>() // 칼만 필터 저장용
@@ -144,6 +146,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     // 호흡 피드백
     private var breathingFeedbackTTS: FeedbackTTS? = null
+    private val breathResultCount = BreathResultCount()
+
 
     enum class SensorType { ACCELEROMETER, GYROSCOPE }
 
@@ -155,6 +159,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         override fun onReceive(context: Context?, intent: Intent?) {
             val result = intent?.getStringExtra("result") ?: return
             Log.d("MainActivity/TTS", "받은 예측 결과: $result")
+
+            //여기에 누적 코드 추가
+            breathResultCount.add(result)
 
             breathingFeedbackTTS?.speak(result)
 
@@ -254,6 +261,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             intent.putExtra("calorie",calorie)
             intent.putExtra("distance",distance)
             intent.putExtra("averageBPM", bpmList.average().toInt())
+
+            //  호흡 결과 누적값 함께 전달
+            intent.putExtra("breath_normal", breathResultCount.normal)
+            intent.putExtra("breath_patternOnly", breathResultCount.patternOnly)
+            intent.putExtra("breath_organOnly", breathResultCount.organOnly)
+            intent.putExtra("breath_bothMismatch", breathResultCount.bothMismatch)
+
             startActivity(intent)
         }
 

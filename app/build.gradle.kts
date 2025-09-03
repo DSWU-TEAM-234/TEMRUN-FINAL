@@ -83,5 +83,23 @@ dependencies {
     implementation("androidx.browser:browser:1.5.0")
     implementation ("com.squareup.okhttp3:okhttp:4.12.0")
 
+    // Pie Chart
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    // Retrofit + Gson
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+    // OkHttp 로깅
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // 코루틴 + ViewModel
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
+
+    //Fragment 확장(KTX) - by viewModels() 등
+    implementation("androidx.fragment:fragment-ktx:1.8.2")
+
+
 
 }

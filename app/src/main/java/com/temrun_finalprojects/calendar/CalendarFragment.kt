@@ -5,19 +5,28 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.temrun_finalprojects.databinding.FragmentCalendarBinding
+import androidx.fragment.app.viewModels
 import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.prolificinteractive.materialcalendarview.MaterialCalendarView
+import com.temrun_finalprojects.databinding.FragmentCalendarBinding
+import com.temrun_finalprojects.util.Constants
 import com.temrun_finalprojects.util.DefaultDateStyleDecorator
-import com.temrun_finalprojects.result.RunningResultBottomSheet
+import com.temrun_finalprojects.calendar.RunDaysDecorator
 import com.temrun_finalprojects.util.SelectedDayDecorator
-import com.temrun_finalprojects.util.SingleDistanceDecorator
 
 class CalendarFragment : Fragment() {
 
     private var _binding: FragmentCalendarBinding? = null
     private val binding get() = _binding!!
 
+    private val vm: CalendarViewModel by viewModels()
     private var selectedDate: CalendarDay? = null
+
+    // 1-based 월(01~12) 유지
+    private var visibleYear: Int = 0
+    private var visibleMonth1: Int = 0
+
+    private var lastRunDays: Set<CalendarDay> = emptySet()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,56 +40,91 @@ class CalendarFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // 기본 설정
         binding.calendarView.state().edit()
             .setFirstDayOfWeek(java.util.Calendar.SUNDAY)
             .commit()
+        binding.calendarView.setShowOtherDates(MaterialCalendarView.SHOW_NONE)
 
-        // ✅ 날짜 텍스트 크기를 모든 날짜에 고정
-        binding.calendarView.addDecorator(DefaultDateStyleDecorator(requireContext()))
+        // 현재 날짜로 초기 설정
+        val current = binding.calendarView.currentDate
+        visibleYear = current.year
+        visibleMonth1 = current.month + 1  // ✅ 예시 코드 방식 차용: month + 1
 
-        val dummyData = mapOf(
-            CalendarDay.from(2025, 5, 5) to "2.8km",
-            CalendarDay.from(2025, 5, 7) to "6.7km",
-            CalendarDay.from(2025, 5, 9) to "6.9km",
-            CalendarDay.from(2025, 5, 11) to "3.9km",
-            CalendarDay.from(2025, 5, 16) to "6.8km",
-            CalendarDay.from(2025, 5, 23) to "5.8km",
-            CalendarDay.from(2025, 5, 25) to "3.7km",
-            CalendarDay.from(2025, 5, 26) to "3.9km",
-            CalendarDay.from(2025, 5, 29) to "2.9km"
-        )
+        binding.textViewYear.text = visibleYear.toString()
+        binding.textViewMonth.text = "%02d".format(visibleMonth1)
 
-        for ((day, text) in dummyData) {
-            binding.calendarView.addDecorator(
-                SingleDistanceDecorator(requireContext(), day, text)
+        // 달이 바뀔 때마다 연/월 텍스트 갱신 + API 호출
+        binding.calendarView.setOnMonthChangedListener { _, date ->
+            visibleYear = date.year
+            visibleMonth1 = date.month + 1  // ✅ month + 1 유지
+
+            binding.textViewYear.text = visibleYear.toString()
+            binding.textViewMonth.text = "%02d".format(visibleMonth1)
+
+            vm.fetchCalendar(
+                Constants.DEFAULT_USER_ID,
+                "%04d-%02d".format(visibleYear, visibleMonth1)
             )
         }
 
-        binding.calendarView.setOnDateChangedListener { _, date, _ ->
-            val clickedDate = CalendarDay.from(date.year, date.month, date.day)
+        // 초기 데코레이터
+        binding.calendarView.removeDecorators()
+        binding.calendarView.addDecorator(DefaultDateStyleDecorator(requireContext()))
 
-            selectedDate = if (clickedDate == selectedDate) null else clickedDate
+        // ✅ ViewModel에서 달린 날짜 마킹
+        vm.summary.observe(viewLifecycleOwner) { s ->
+            s ?: return@observe
+
+            // 상단 요약 박스
+            binding.textViewSummary.text =
+                "${secondsToHHMM(s.totalDuration)} / ${s.averageBpm}BPM / ${s.totalCalories}kcal"
+
+            // ✅ CalendarDay 생성 시 month - 1 보정 (0-based)
+            val runDays = s.runningDates.mapNotNull { dayStr ->
+                dayStr.toIntOrNull()?.let { day ->
+                    CalendarDay.from(visibleYear, visibleMonth1 - 1, day)
+                }
+            }.toSet()
+            lastRunDays = runDays
 
             binding.calendarView.removeDecorators()
-
-            // 항상 날짜 숫자 크기 유지
             binding.calendarView.addDecorator(DefaultDateStyleDecorator(requireContext()))
-
-            for ((day, text) in dummyData) {
-                binding.calendarView.addDecorator(
-                    SingleDistanceDecorator(requireContext(), day, text)
-                )
-            }
+            binding.calendarView.addDecorator(RunDaysDecorator(requireContext(), runDays))
 
             selectedDate?.let {
-                binding.calendarView.addDecorator(
-                    SelectedDayDecorator(requireContext(), it)
-                )
+                binding.calendarView.addDecorator(SelectedDayDecorator(requireContext(), it))
             }
 
-            val bottomSheet = RunningResultBottomSheet()
-            bottomSheet.show(parentFragmentManager, bottomSheet.tag)
+            binding.calendarView.invalidateDecorators()
         }
+
+        // 날짜 선택 시 강조
+        binding.calendarView.setOnDateChangedListener { _, date, _ ->
+            val clicked = CalendarDay.from(date.year, date.month, date.day) // ✅ date.month는 이미 0-based
+
+            selectedDate = if (selectedDate == clicked) null else clicked
+
+            binding.calendarView.removeDecorators()
+            binding.calendarView.addDecorator(DefaultDateStyleDecorator(requireContext()))
+            binding.calendarView.addDecorator(RunDaysDecorator(requireContext(), lastRunDays))
+            selectedDate?.let {
+                binding.calendarView.addDecorator(SelectedDayDecorator(requireContext(), it))
+            }
+            binding.calendarView.invalidateDecorators()
+        }
+
+        // 최초 로딩도 현재 보이는 달 기준으로
+        vm.fetchCalendar(
+            Constants.DEFAULT_USER_ID,
+            "%04d-%02d".format(visibleYear, visibleMonth1)
+        )
+    }
+
+    private fun secondsToHHMM(sec: Int): String {
+        val h = sec / 3600
+        val m = (sec % 3600) / 60
+        return "%02d:%02d".format(h, m)
     }
 
     override fun onDestroyView() {

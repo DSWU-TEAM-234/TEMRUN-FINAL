@@ -216,16 +216,28 @@
                         android:text="호흡"
                         android:textStyle="bold" />
 
+                    <com.github.mikephil.charting.charts.PieChart
+                        android:id="@+id/breathPieChart"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:layout_marginTop="8dp" />
+
                     <!--                    <ImageView-->
                     <!--                        android:layout_width="match_parent"-->
                     <!--                        android:layout_height="100dp"-->
                     <!--                        android:src="@drawable/sample_graph" />-->
 
+                    <!-- 정상:비정상 비율 표기 -->
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:id="@+id/breathRatioText"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
                         android:gravity="center"
-                        android:text="전체 정확률\n85%" />
+                        android:textSize="14sp"
+                        android:textColor="#333333"
+                        android:text="정상 : 비정상\n  -  :  -" />
+
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
