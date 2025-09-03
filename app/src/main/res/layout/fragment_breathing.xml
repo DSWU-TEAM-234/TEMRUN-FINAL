@@ -45,7 +45,7 @@
                 android:orientation="horizontal"
                 android:gravity="center">
 
-                <!-- 정상 비율 (숨김) -->
+                <!-- 정상 비율 -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -58,20 +58,18 @@
                         android:layout_height="wrap_content"
                         android:text="정상"
                         android:textSize="12sp"
-                        android:textColor="@color/black"
-                        android:visibility="gone" />
+                        android:textColor="@color/black" />
 
                     <TextView
-                        android:id="@+id/textAccuracy"
+                        android:id="@+id/textPatterNormal"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:visibility="gone" />
+                        android:textColor="@color/black" />
                 </LinearLayout>
 
-                <!-- 비정상 총합 -->
+                <!-- 비정상 비율 -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -87,7 +85,7 @@
                         android:textColor="@color/black" />
 
                     <TextView
-                        android:id="@+id/textPatternAccuracy"
+                        android:id="@+id/textPatternAbnormal"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="16sp"
