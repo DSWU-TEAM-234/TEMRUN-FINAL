@@ -1,37 +1,47 @@
 package com.temrun_finalprojects.calendar
 
-import android.content.Intent // [추가] SessionActivity로 이동하기 위해 필요
+import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast // [추가] 기록 없을 때 안내용
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.temrun_finalprojects.databinding.FragmentCalendarBinding
 import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.prolificinteractive.materialcalendarview.CalendarMode
+import com.prolificinteractive.materialcalendarview.DayViewDecorator
+import com.prolificinteractive.materialcalendarview.DayViewFacade
+import com.prolificinteractive.materialcalendarview.MaterialCalendarView
+import com.temrun_finalprojects.databinding.FragmentCalendarBinding
 import com.temrun_finalprojects.util.DefaultDateStyleDecorator
-import com.temrun_finalprojects.result.RunningResultBottomSheet
-import com.temrun_finalprojects.util.SelectedDayDecorator
-import com.temrun_finalprojects.util.SingleDistanceDecorator
-import com.temrun_finalprojects.calendar.SessionActivity // [추가] 이동 대상 액티비티
-import kotlin.jvm.java
+import okhttp3.*
+import org.json.JSONObject
+import java.io.IOException
+import java.time.LocalDate
 
 class CalendarFragment : Fragment() {
 
     private var _binding: FragmentCalendarBinding? = null
     private val binding get() = _binding!!
 
-    private var selectedDate: CalendarDay? = null
+    private val runningDays = mutableSetOf<CalendarDay>()
 
     companion object {
-        // [추가] 인텐트 키 상수화
         private const val EXTRA_DATE = "extra_date"
-        // [추가] 날짜 포맷(yyyy-MM-dd)
+        private const val BASE_URL = "https://274247511994.ngrok-free.app"
+        private const val USER_ID = "user123"
+        private val client = OkHttpClient()
+
         private fun formatDate(day: CalendarDay): String {
-            // CalendarDay의 month는 실제 달 번호(1~12)로 들어오므로 그대로 사용
             return String.format("%04d-%02d-%02d", day.year, day.month, day.day)
         }
     }
+
+    // MaterialCalendarView.month는 0~11이므로 +1 보정
+    private fun normalizeMonth(monthZeroBased: Int): Int = monthZeroBased + 1
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,78 +55,103 @@ class CalendarFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.calendarView.setTopbarVisible(false)
         binding.calendarView.state().edit()
             .setFirstDayOfWeek(java.util.Calendar.SUNDAY)
+            .setCalendarDisplayMode(CalendarMode.MONTHS)
             .commit()
+        binding.calendarView.setShowOtherDates(MaterialCalendarView.SHOW_NONE)
 
-        // ✅ 날짜 텍스트 크기를 모든 날짜에 고정
+        // 1) 초기 헤더/데이터 로드
+        val current = binding.calendarView.currentDate
+        val initYear = current.year
+        val initMonth = normalizeMonth(current.month)
+        updateHeaderDate(LocalDate.of(initYear, initMonth, 1))
+        fetchCalendarData(initYear, initMonth)
+
+        // 2) 월 변경 시 헤더 및 데이터 갱신
+        binding.calendarView.setOnMonthChangedListener { _, date ->
+            val year = date.year
+            val month = normalizeMonth(date.month)
+            updateHeaderDate(LocalDate.of(year, month, 1))
+            fetchCalendarData(year, month)
+        }
+
         binding.calendarView.addDecorator(DefaultDateStyleDecorator(requireContext()))
 
-        // [원본 유지] 데모용 거리 텍스트 데코레이터 데이터
-        val dummyData = mapOf(
-            CalendarDay.from(2025, 5, 5) to "2.8km",
-            CalendarDay.from(2025, 5, 7) to "6.7km",
-            CalendarDay.from(2025, 5, 9) to "6.9km",
-            CalendarDay.from(2025, 5, 11) to "3.9km",
-            CalendarDay.from(2025, 5, 16) to "6.8km",
-            CalendarDay.from(2025, 5, 23) to "5.8km",
-            CalendarDay.from(2025, 5, 25) to "3.7km",
-            CalendarDay.from(2025, 5, 26) to "3.9km",
-            CalendarDay.from(2025, 5, 29) to "2.9km"
-        )
-
-        // [원본 유지] 기록 표시 데코레이터 적용
-        for ((day, text) in dummyData) {
-            binding.calendarView.addDecorator(
-                SingleDistanceDecorator(requireContext(), day, text)
-            )
-        }
-
-        // [변경] 날짜 선택 리스너: 기록 존재 여부에 따라 SessionActivity로 이동
+        // 3) 날짜 클릭 시 선택 해제하고 기록 여부에 따라 처리
         binding.calendarView.setOnDateChangedListener { _, date, _ ->
-            val clickedDate = CalendarDay.from(date.year, date.month, date.day)
+            binding.calendarView.clearSelection()
 
-            // [원본 유지] 선택 상태 토글
-            selectedDate = if (clickedDate == selectedDate) null else clickedDate
+            val y = date.year
+            val m = normalizeMonth(date.month)
+            val d = date.day
+            val clickedDate = CalendarDay.from(y, m, d)
 
-            // [원본 유지] 기존 데코레이터 재적용 흐름
-            binding.calendarView.removeDecorators()
-
-            // 항상 날짜 숫자 크기 유지
-            binding.calendarView.addDecorator(DefaultDateStyleDecorator(requireContext()))
-
-            for ((day, text) in dummyData) {
-                binding.calendarView.addDecorator(
-                    SingleDistanceDecorator(requireContext(), day, text)
+            if (clickedDate in runningDays) {
+                startActivity(
+                    Intent(requireContext(), SessionActivity::class.java).apply {
+                        putExtra(EXTRA_DATE, formatDate(clickedDate))
+                    }
                 )
-            }
-
-            selectedDate?.let {
-                binding.calendarView.addDecorator(
-                    SelectedDayDecorator(requireContext(), it)
-                )
-            }
-
-            // [핵심 변경] 기록이 있는 날짜면 SessionActivity로 이동, 없으면 안내 토스트
-            // CalendarDay equals 비교는 year/month/day 기준으로 동등성 체크 가능
-            if (dummyData.keys.any { it == clickedDate }) {
-                val dateText = formatDate(clickedDate)
-                val intent = Intent(requireContext(), SessionActivity::class.java).apply {
-                    putExtra(EXTRA_DATE, dateText) // yyyy-MM-dd
-                }
-                startActivity(intent)
-                // [참고] 기존 BottomSheet는 기록이 있을 때 대신 SessionActivity로 이동합니다.
-                // val bottomSheet = RunningResultBottomSheet()
-                // bottomSheet.show(parentFragmentManager, bottomSheet.tag)
             } else {
-                // 기록이 없는 날짜
                 Toast.makeText(requireContext(), "선택한 날짜의 러닝 기록이 없어요.", Toast.LENGTH_SHORT).show()
-
-                // [원본 유지 선택지] 기록이 없을 때만 BottomSheet를 띄우고 싶다면 아래 주석을 해제
-                // val bottomSheet = RunningResultBottomSheet()
-                // bottomSheet.show(parentFragmentManager, bottomSheet.tag)
             }
         }
+    }
+
+    private fun updateHeaderDate(date: LocalDate) {
+        binding.textViewYear.text = date.year.toString()
+        binding.textViewMonth.text = date.monthValue.toString().padStart(2, '0')
+    }
+
+    private fun fetchCalendarData(year: Int, month: Int) {
+        val monthParam = String.format("%04d-%02d", year, month)
+        val url = "$BASE_URL/api/users/$USER_ID/calendar?month=$monthParam"
+        val request = Request.Builder().url(url).get().build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                requireActivity().runOnUiThread {
+                    Toast.makeText(requireContext(), "캘린더 데이터를 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.body?.string()?.let { body ->
+                    val json = JSONObject(body)
+                    val dates = json.optJSONArray("runningDates") ?: return@let
+                    runningDays.clear()
+                    for (i in 0 until dates.length()) {
+                        val dayInt = dates.getString(i).toInt()
+                        runningDays.add(CalendarDay.from(year, month, dayInt))
+                    }
+
+                    val totalSec = json.optLong("totalDuration", 0L)
+                    val avgBpm = json.optInt("averageBpm", 0)
+                    val totalCal = json.optInt("totalCalories", 0)
+
+                    val hours = totalSec / 3600
+                    val minutes = (totalSec % 3600) / 60
+                    val durationStr = String.format("%d:%02d", hours, minutes)
+
+                    requireActivity().runOnUiThread {
+                        updateMonthSummary(durationStr, avgBpm, totalCal)
+                    }
+                }
+            }
+        })
+    }
+
+
+
+    private fun updateMonthSummary(
+        totalDuration: String,
+        averageBpm: Int,
+        totalCalories: Int
+    ) {
+        binding.textViewSummary.text =
+            "$totalDuration / ${averageBpm}BPM / ${totalCalories}kcal"
     }
 
     override fun onDestroyView() {

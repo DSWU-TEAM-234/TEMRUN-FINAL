@@ -447,7 +447,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             @JavascriptInterface
             fun onWebReady() {
                 // 웹에서 준비됐다고 알림 > 이때 토큰 보냄
-                    webView.post {
+                webView.post {
                     webView.evaluateJavascript("window.receiveToken('$token');", null)
                     give_TrackList(webView)
                 }
@@ -936,7 +936,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
     }
 
-//------------------------------------------------------
+    //------------------------------------------------------
 // 폰 크기에 따라 레이아웃 바꾸는 함수
     private fun setupLayoutConstraints() {
         val screenWidthDp = resources.configuration.screenWidthDp
@@ -952,4 +952,3 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 }
-

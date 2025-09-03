@@ -1,48 +1,70 @@
 package com.temrun_finalprojects.calendar
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.temrun_finalprojects.R
-import com.temrun_finalprojects.result.RunningResultBottomSheet
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Random
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
+import retrofit2.http.Path
+import java.util.concurrent.TimeUnit
+
+// 1. Data model matching the API response
+data class RunSession(
+    val runId: String,
+    val totalDuration: Long,
+    val averageBpm: Int,
+    val totalCalories: Int,
+    val startTime: String
+)
+
+// 2. Retrofit service interface
+interface RunsApiService {
+    @GET("/api/users/{user_id}/runs/date/{date}")
+    suspend fun getRunsByDate(
+        @Path("user_id") userId: String,
+        @Path("date") date: String
+    ): List<RunSession>
+}
 
 class SessionActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_DATE = "extra_date"
+        private const val BASE_URL = "https://274247511994.ngrok-free.app"
+        private const val USER_ID = "user123"
     }
 
     private lateinit var tvSelectedDate: TextView
     private lateinit var tvEmpty: TextView
-    private lateinit var progressBar: ProgressBar
+    private lateinit var progress: ProgressBar
     private lateinit var rvSessions: RecyclerView
-    private lateinit var sessionAdapter: SessionAdapter
+    private lateinit var adapter: SessionAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_session)
 
-        // 툴바 설정
-        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        toolbar.setNavigationOnClickListener { onBackPressed() }
 
         tvSelectedDate = findViewById(R.id.tvSelectedDate)
         tvEmpty = findViewById(R.id.tvEmpty)
-        progressBar = findViewById(R.id.progress)
+        progress = findViewById(R.id.progress)
         rvSessions = findViewById(R.id.rvSessions)
+
+        // RecyclerView setup
+        adapter = SessionAdapter()
+        rvSessions.layoutManager = LinearLayoutManager(this)
+        rvSessions.adapter = adapter
 
         val dateText = intent.getStringExtra(EXTRA_DATE)
         if (dateText.isNullOrBlank()) {
@@ -51,117 +73,49 @@ class SessionActivity : AppCompatActivity() {
             return
         }
 
-        try {
-            val parsedDate = LocalDate.parse(dateText, DateTimeFormatter.ISO_LOCAL_DATE)
-            val displayFormatter = DateTimeFormatter.ofPattern("M월 d일")
-            tvSelectedDate.text = parsedDate.format(displayFormatter)
-        } catch (e: Exception) {
-            tvSelectedDate.text = dateText
-            e.printStackTrace()
-        }
+        supportActionBar?.title = dateText
+        tvSelectedDate.text = dateText
 
-        // RecyclerView 초기화
-        sessionAdapter = SessionAdapter(this)
-        rvSessions.layoutManager = LinearLayoutManager(this)
-        rvSessions.adapter = sessionAdapter
-
-        // 더미 데이터 로드
-        loadDummySessions(dateText)
+        loadSessions(dateText)
     }
 
-    private fun loadDummySessions(date: String) {
-        progressBar.visibility = View.VISIBLE
+    private fun loadSessions(date: String) {
+        progress.visibility = View.VISIBLE
         tvEmpty.visibility = View.GONE
-        rvSessions.visibility = View.GONE
 
-        rvSessions.postDelayed({
-            val dummyRecords = generateDummyRecords(date)
-            if (dummyRecords.isEmpty()) {
-                tvEmpty.visibility = View.VISIBLE
-                rvSessions.visibility = View.GONE
-            } else {
-                sessionAdapter.submitList(dummyRecords)
-                tvEmpty.visibility = View.GONE
-                rvSessions.visibility = View.VISIBLE
+        // Configure Retrofit
+        val client = OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val api = retrofit.create(RunsApiService::class.java)
+
+        lifecycleScope.launch {
+            try {
+                val sessions = api.getRunsByDate(USER_ID, date)
+                progress.visibility = View.GONE
+
+                if (sessions.isEmpty()) {
+                    tvEmpty.visibility = View.VISIBLE
+                } else {
+                    adapter.submitList(sessions)
+                }
+            } catch (e: Exception) {
+                progress.visibility = View.GONE
+                Toast.makeText(
+                    this@SessionActivity,
+                    "러닝 기록을 불러오는 중 오류가 발생했습니다.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                e.printStackTrace()
             }
-            progressBar.visibility = View.GONE
-        }, 500)
-    }
-
-    private fun generateDummyRecords(date: String): List<SessionRecord> {
-        val list = mutableListOf<SessionRecord>()
-        val selectedDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE)
-        val random = Random()
-
-        fun rndDistance() = String.format("%.1fkm", random.nextDouble() * 10)
-        fun rndTime() = "${random.nextInt(1) + 1}시간 ${random.nextInt(60)}분"
-        fun rndBpm() = random.nextInt(50) + 120
-        fun rndCal() = random.nextInt(300) + 50
-
-        when (selectedDate.dayOfWeek) {
-            DayOfWeek.MONDAY -> list.add(
-                SessionRecord("오전 러닝", "07:00", "0:30:10", rndBpm(), rndCal())
-            )
-            DayOfWeek.TUESDAY -> list.add(
-                SessionRecord("조깅", "18:00", "0:20:45", rndBpm(), rndCal())
-            )
-            // 나머지 요일 패턴 생략 가능...
-            else -> { /* 랜덤 기록 생략 */ }
-        }
-        // 60% 확률로 랜덤 기록 추가
-        if (random.nextInt(100) < 60) {
-            list.add(
-                SessionRecord(
-                    "랜덤 기록",
-                    "${random.nextInt(23).toString().padStart(2, '0')}:${random.nextInt(60).toString().padStart(2, '0')}",
-                    rndTime(),
-                    rndBpm(),
-                    rndCal()
-                )
-            )
-        }
-        return list
-    }
-
-    private class SessionAdapter(private val activity: AppCompatActivity) :
-        RecyclerView.Adapter<SessionAdapter.SessionViewHolder>() {
-
-        private var records: List<SessionRecord> = emptyList()
-
-        inner class SessionViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val title: TextView = view.findViewById(R.id.textTitle)
-            val time: TextView = view.findViewById(R.id.textStartTime)
-            val duration: TextView = view.findViewById(R.id.textDuration)
-            val avgBpm: TextView = view.findViewById(R.id.textAvgBpm)
-            val calories: TextView = view.findViewById(R.id.textCalories)
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SessionViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_session, parent, false)
-            return SessionViewHolder(view)
-        }
-
-        override fun onBindViewHolder(holder: SessionViewHolder, position: Int) {
-            val record = records[position]
-            holder.title.text = record.title
-            holder.time.text = record.startTime
-            holder.duration.text = record.duration
-            holder.avgBpm.text = record.avgBpm.toString()
-            holder.calories.text = record.calories.toString()
-
-            // 각 세션 클릭 시 상세 기록 보기 BottomSheet 연결
-            holder.itemView.setOnClickListener {
-                val bottomSheet = RunningResultBottomSheet()
-                bottomSheet.show(activity.supportFragmentManager, "RunningResultBottomSheet")
-            }
-        }
-
-        override fun getItemCount(): Int = records.size
-
-        fun submitList(newRecords: List<SessionRecord>) {
-            records = newRecords
-            notifyDataSetChanged()
         }
     }
 }
