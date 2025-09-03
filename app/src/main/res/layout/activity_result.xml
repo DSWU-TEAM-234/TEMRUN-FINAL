@@ -216,16 +216,80 @@
                         android:text="호흡"
                         android:textStyle="bold" />
 
-                    <!--                    <ImageView-->
-                    <!--                        android:layout_width="match_parent"-->
-                    <!--                        android:layout_height="100dp"-->
-                    <!--                        android:src="@drawable/sample_graph" />-->
+                    <!-- 비정상 세부 사항 PieChart 뷰 -->
+                    <com.github.mikephil.charting.charts.PieChart
+                        android:id="@+id/pieChartBreathing"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:layout_marginBottom="12dp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <!-- 정상 / 비정상 비율 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:text="전체 정확률\n85%" />
+                        android:orientation="horizontal"
+                        android:gravity="center">
+
+                        <!-- 정상 비율 -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="정상"
+                                android:textSize="12sp"
+                                android:textColor="@color/black" />
+
+                            <TextView
+                                android:id="@+id/textPatterNormal"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black" />
+                        </LinearLayout>
+
+                        <!-- 중앙 콜론 -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=":"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"
+                            android:layout_marginHorizontal="8dp"
+                            android:gravity="center" />
+
+                        <!-- 비정상 비율 -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="비정상"
+                                android:textSize="12sp"
+                                android:textColor="@color/black" />
+
+                            <TextView
+                                android:id="@+id/textPatternAbnormal"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/black" />
+                        </LinearLayout>
+
+                    </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
@@ -260,11 +324,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="200dp" />
 
-
-                    <!--                    <ImageView-->
-                    <!--                        android:layout_width="match_parent"-->
-                    <!--                        android:layout_height="100dp"-->
-                    <!--                        android:src="@drawable/sample_graph" />-->
 
                     <!-- 통계 지표 -->
                     <LinearLayout

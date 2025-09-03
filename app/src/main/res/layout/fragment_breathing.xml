@@ -38,7 +38,7 @@
                 android:layout_height="200dp"
                 android:layout_marginBottom="12dp" />
 
-            <!-- 정상(숨김) / 비정상 총합 비율 -->
+            <!-- 정상 / 비정상 비율 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

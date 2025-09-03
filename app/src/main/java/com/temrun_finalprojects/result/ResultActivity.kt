@@ -14,100 +14,104 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.bumptech.glide.Glide
 import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
+import com.github.mikephil.charting.formatter.PercentFormatter
 import com.temrun_finalprojects.R
 import com.temrun_finalprojects.RootActivity
 import com.temrun_finalprojects.data.Song
+import kotlin.math.abs
 
-class ResultActivity: AppCompatActivity() {
+class ResultActivity : AppCompatActivity() {
 
     private lateinit var cadenceChart: LineChart
+    private lateinit var pieChartBreathing: PieChart
+    private lateinit var tvPatternNormal: TextView
+    private lateinit var tvPatternAbnormal: TextView
+    private lateinit var tvAccuracy: TextView
+    private lateinit var tvAvgCadence: TextView
+    private lateinit var tvDistance: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_result)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.result)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            val sys = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(sys.left, sys.top, sys.right, sys.bottom)
             insets
         }
 
-        val songContainer = findViewById<LinearLayout>(R.id.songLinearLayout) // 내부 LinearLayout ID
-
-//        val songList = listOf(
-//            Song("노래1", "가수1"),
-//            Song("노래2", "가수2"),
-//            Song("노래3", "가수3")
-//        )
-
-        val receivedSongs = intent.getParcelableArrayListExtra<Song>("songs") ?: arrayListOf()
-
-        for (song in receivedSongs)
-        {
-            val itemView =
-                LayoutInflater.from(this).inflate(R.layout.item_song_card, songContainer, false)
-
-            val title = itemView.findViewById<TextView>(R.id.songTitle)
-            val artist = itemView.findViewById<TextView>(R.id.songArtist)
-            val image = itemView.findViewById<ImageView>(R.id.albumImageView)
-
-            title.text = song.title
-            artist.text = song.artist
-            Glide.with(itemView.context)
-                .load(song.albumImageUrl)
-                .into(image)
-
-            songContainer.addView(itemView)
-        }
-
-        val time = intent.getIntExtra("time", 0)
-        val calorie = intent.getDoubleExtra("calorie", 0.0)
-        val distance = intent.getFloatExtra("distance", 0f)
-        val averageBPM = intent.getIntExtra("averageBPM", 0)
-
-        // 러닝 시작 시 선택한 목표 케이던스와 실시간 케이던스 데이터 받기
+        // 1) 데이터 수신
+        val songs = intent.getParcelableArrayListExtra<Song>("songs") ?: arrayListOf()
+        val elapsedSeconds = intent.getIntExtra("time", 0)
+        val avgBPM = intent.getIntExtra("averageBPM", 0)
+        val cadenceList = intent.getIntegerArrayListExtra("cadenceDataList") ?: arrayListOf()
         val targetCadence = intent.getIntExtra("targetCadence", 160)
-        val cadenceDataList = intent.getIntegerArrayListExtra("cadenceDataList") ?: arrayListOf()
 
-        val hours = time / 3600
-        val minutes = (time % 3600) / 60
-        val seconds = time % 60
-        val timeFormatted = String.format("%02d:%02d", minutes, seconds)
+        val breathNormalAcc = intent.getIntExtra("breathNormalAcc", 0)
+        val breathAbnormalAcc = intent.getIntExtra("breathAbnormalAcc", 0)
+        val breathAbnl1 = intent.getIntExtra("breathAbnormalType1", 0)
+        val breathAbnl2 = intent.getIntExtra("breathAbnormalType2", 0)
+        val breathAbnl3 = intent.getIntExtra("breathAbnormalType3", 0)
 
-        findViewById<TextView>(R.id.ResultTimeText).text = timeFormatted
-        findViewById<TextView>(R.id.ResultBPMText).text =  averageBPM.toString()
-        findViewById<TextView>(R.id.ResultCalorieText).text = calorie.toString()
+        // 2) 뷰 바인딩
+        findViewById<TextView>(R.id.ResultTimeText).text = String.format(
+            "%02d:%02d",
+            elapsedSeconds / 60,
+            elapsedSeconds % 60
+        )
+        findViewById<TextView>(R.id.ResultBPMText).text = avgBPM.toString()
+        findViewById<TextView>(R.id.ResultCalorieText).text =
+            intent.getDoubleExtra("calorie", 0.0).toString()
 
-        // 케이던스 차트 초기화 및 설정
-        setupCadenceChart(targetCadence, cadenceDataList)
+        pieChartBreathing = findViewById(R.id.pieChartBreathing)
+        tvPatternNormal = findViewById(R.id.textPatterNormal)
+        tvPatternAbnormal = findViewById(R.id.textPatternAbnormal)
 
-        val resultConfirmButton : Button = findViewById(R.id.resultConfirmButton)
+        tvAccuracy = findViewById(R.id.textCadenceAccuracy)
+        tvAvgCadence = findViewById(R.id.textCadenceValue)
+        tvDistance = findViewById(R.id.textCadencePrecision)
 
-        resultConfirmButton.setOnClickListener {
-            val intent = Intent(this, RootActivity::class.java)
-            intent.putExtra("targetFragment", "home")
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            startActivity(intent)
-            finish()
-        }
-    }
-
-    private fun setupCadenceChart(targetCadence: Int, cadenceDataList: List<Int>) {
         cadenceChart = findViewById(R.id.chartCadence)
+        val songContainer = findViewById<LinearLayout>(R.id.songLinearLayout)
 
-        // 실시간 케이던스 데이터를 그래프 엔트리로 변환
-        val entries = mutableListOf<Entry>()
-        cadenceDataList.forEachIndexed { index, cadence ->
-            entries.add(Entry(index.toFloat(), cadence.toFloat()))
+        // 3) 호흡 PieChart
+        val pieEntries = listOf(
+            PieEntry(breathAbnl1.toFloat(), "타입1"),
+            PieEntry(breathAbnl2.toFloat(), "타입2"),
+            PieEntry(breathAbnl3.toFloat(), "타입3")
+        )
+        val pieDs = PieDataSet(pieEntries, "").apply {
+            setColors(
+                ContextCompat.getColor(this@ResultActivity, R.color.teal_700),
+                ContextCompat.getColor(this@ResultActivity, R.color.purple_500),
+                ContextCompat.getColor(this@ResultActivity, R.color.orange_500)
+            )
+            valueFormatter = PercentFormatter(pieChartBreathing)
+            valueTextSize = 12f
         }
+        pieChartBreathing.apply {
+            data = PieData(pieDs)
+            setUsePercentValues(true)
+            description.isEnabled = false
+            legend.isEnabled = true
+            animateY(600)
+            invalidate()
+        }
+        tvPatternNormal.text = breathNormalAcc.toString()
+        tvPatternAbnormal.text = breathAbnormalAcc.toString()
 
-        // 실시간 케이던스 라인 데이터셋 생성
-        val dataSet = LineDataSet(entries, "실시간 케이던스").apply {
+        // 4) 케이던스 LineChart
+        val lineEntries = cadenceList.mapIndexed { i, c -> Entry(i.toFloat(), c.toFloat()) }
+        val lineDs = LineDataSet(lineEntries, "실시간 케이던스").apply {
             color = ContextCompat.getColor(this@ResultActivity, R.color.teal_700)
             lineWidth = 2f
             setDrawCircles(true)
@@ -116,50 +120,69 @@ class ResultActivity: AppCompatActivity() {
             mode = LineDataSet.Mode.LINEAR
             setDrawValues(false)
         }
-
-        // 차트에 데이터 설정
-        cadenceChart.data = LineData(dataSet)
-
-        // Y축 설정
-        val leftAxis: YAxis = cadenceChart.axisLeft
-        leftAxis.axisMinimum = 0f
-        leftAxis.axisMaximum = 220f
-        leftAxis.setDrawGridLines(true)
-        leftAxis.gridColor = ContextCompat.getColor(this, R.color.light_gray)
-
-        // 목표 케이던스 직선 추가
-        val targetLimitLine = LimitLine(targetCadence.toFloat(), "목표 케이던스 ($targetCadence)").apply {
-            lineWidth = 4f
-            lineColor = ContextCompat.getColor(this@ResultActivity, R.color.purple_500)
-            textColor = ContextCompat.getColor(this@ResultActivity, R.color.purple_500)
-            textSize = 12f
-            labelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
-        }
-        leftAxis.addLimitLine(targetLimitLine)
-
-        // 오른쪽 Y축 비활성화
+        cadenceChart.data = LineData(lineDs)
+        val left = cadenceChart.axisLeft
+        left.axisMinimum = 0f
+        left.axisMaximum = 220f
+        left.setDrawGridLines(true)
+        left.gridColor = ContextCompat.getColor(this, R.color.light_gray)
+        left.addLimitLine(
+            LimitLine(targetCadence.toFloat(), "목표($targetCadence)").apply {
+                lineWidth = 4f
+                lineColor = ContextCompat.getColor(this@ResultActivity, R.color.purple_500)
+                textColor = ContextCompat.getColor(this@ResultActivity, R.color.purple_500)
+                textSize = 12f
+                labelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
+            }
+        )
         cadenceChart.axisRight.isEnabled = false
-
-        // X축 설정
         cadenceChart.xAxis.apply {
             setDrawGridLines(true)
-            setAvoidFirstLastClipping(true)
             granularity = 1f
             gridColor = ContextCompat.getColor(this@ResultActivity, R.color.light_gray)
         }
-
-        // 차트 전체 설정
         cadenceChart.apply {
             description.isEnabled = false
             legend.isEnabled = true
-            setTouchEnabled(true)
-            isDragEnabled = true
-            setScaleEnabled(true)
-            setPinchZoom(true)
             animateX(1000)
+            invalidate()
         }
 
-        // 차트 새로고침
-        cadenceChart.invalidate()
+        // 5) 정확도/평균/거리 계산 및 표시
+        if (cadenceList.isNotEmpty()) {
+            val within = cadenceList.count { abs(it - targetCadence) <= 5 }
+            val accuracy = within * 100 / cadenceList.size
+            tvAccuracy.text = "±${accuracy}%"
+            val avgCad = cadenceList.sum() / cadenceList.size
+            tvAvgCadence.text = avgCad.toString()
+            val meters = avgCad / 60.0 * elapsedSeconds * 0.8
+            tvDistance.text = String.format("%.2f km", meters / 1000)
+        } else {
+            tvAccuracy.text = "±0%"
+            tvAvgCadence.text = "0"
+            tvDistance.text = "0 km"
+        }
+
+        // 6) 노래 카드
+        songs.forEach { song ->
+            val view = LayoutInflater.from(this)
+                .inflate(R.layout.item_song_card, songContainer, false)
+            view.findViewById<TextView>(R.id.songTitle).text = song.title
+            view.findViewById<TextView>(R.id.songArtist).text = song.artist
+            Glide.with(this).load(song.albumImageUrl)
+                .into(view.findViewById(R.id.albumImageView))
+            songContainer.addView(view)
+        }
+
+        // 7) 완료 버튼
+        findViewById<Button>(R.id.resultConfirmButton)
+            .setOnClickListener {
+                Intent(this, RootActivity::class.java).apply {
+                    putExtra("targetFragment", "home")
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    startActivity(this)
+                    finish()
+                }
+            }
     }
 }
