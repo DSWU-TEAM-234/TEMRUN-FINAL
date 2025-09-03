@@ -213,6 +213,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
         )
 
+        // Home에서 넘어온 값 로그 출력
+        val mode = intent.getStringExtra("mode")
+        val breath = intent.getStringExtra("breath")
+        val cadence = intent.getIntExtra("cadence", -1)
+        val time = intent.getIntExtra("time", -1)
+
+        Log.d("MainActivity/Intent", "mode = $mode, breath = $breath, cadence = $cadence, time = $time")
+
         // 버튼 연결
         val pauseButton: ImageButton = findViewById(R.id.pauseButton)
         val pauseOptions: LinearLayout = findViewById(R.id.pauseOptions)
@@ -410,13 +418,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     val uiMode = intent.getStringExtra("mode") ?: "normal"
                     val serverMode = when (uiMode.lowercase()) {
                         "normal" -> "normal"
-                        "training" -> "beginner"
-                        "beginner" -> "beginner"
+                        "training", "beginner" -> "beginner"
                         else -> "beginner"
                     }
-                    val breath = intent.getStringExtra("breath") ?: "1:1"
+                    val breath = intent.getStringExtra("breath") ?: "1_1"
                     val cadence = intent.getIntExtra("cadence", 150)
-                    val durationMin = intent.getIntExtra("time", 60).let { if (it <= 0) 60 else it }
+                    val durationMin = intent.getIntExtra("time", 15).let { if (it <= 0) 60 else it }
                     currentBpm = cadence
 
                     // 3) 러닝 세션 시작 → tracks 수신

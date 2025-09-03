@@ -121,7 +121,7 @@ class HomeFragment : Fragment() {
             intent.putExtra("cadence", cadence)
             intent.putExtra("mode", selectedMode)
             intent.putExtra("time", total)
-            intent.putExtra("Breath", selectedBreath)
+            intent.putExtra("breath", selectedBreath)
 
             intent.putExtra("cadence", cadenceValue)
             startActivity(intent)

@@ -123,7 +123,7 @@ class ResultActivity : AppCompatActivity() {
 
         val time = intent.getIntExtra("time", 0)
         val calorie = intent.getDoubleExtra("calorie", 0.0)
-        val distance = intent.getFloatExtra("distance", 0f) // 전달 타입 유지
+        val distance = intent.getFloatExtra("distance", 0f)
         val averageBPM = intent.getIntExtra("averageBPM", 0)
 
         val minutes = (time % 3600) / 60
