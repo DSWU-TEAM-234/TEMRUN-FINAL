@@ -10,7 +10,7 @@ import androidx.fragment.app.Fragment
 import okhttp3.*
 import java.io.IOException
 
-class MyPageFragment : Fragment(R.layout.fragment_my_page) {
+class MyPageFragment : Fragment(R.layout.fragment_account) {
 
     private val client by lazy { OkHttpClient() }
     // TODO: 서버 재기동 시 교체
@@ -18,6 +18,7 @@ class MyPageFragment : Fragment(R.layout.fragment_my_page) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
 
         view.findViewById<Button>(R.id.btnDeleteAccount)?.setOnClickListener {
             showDeleteConfirm()

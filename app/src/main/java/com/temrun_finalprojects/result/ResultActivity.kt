@@ -47,7 +47,7 @@ class ResultActivity : AppCompatActivity() {
 
     private val client by lazy { OkHttpClient() }
     private val mediaJson by lazy { "application/json; charset=utf-8".toMediaType() }
-    private val BASE_URL = "https://4a0bc02d836c.ngrok-free.app"
+    private val BASE_URL = "https://d07802f0f999.ngrok-free.app"
 
     private lateinit var cadenceChart: LineChart
     private lateinit var tvAccuracy: TextView
