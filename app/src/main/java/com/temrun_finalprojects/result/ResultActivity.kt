@@ -29,6 +29,11 @@ import com.temrun_finalprojects.R
 import com.temrun_finalprojects.RootActivity
 import com.temrun_finalprojects.data.Song
 import kotlin.math.abs
+import androidx.activity.viewModels
+import android.widget.Toast
+import com.temrun_finalprojects.network.RunResultRequest
+import com.temrun_finalprojects.network.FeedbackSummary
+
 
 // 호흡 피드백 데이터(정상 + 비정상 세부 분포)
 data class BreathFeedbackCounts(
@@ -44,6 +49,9 @@ class ResultActivity : AppCompatActivity() {
     private lateinit var tvAccuracy: TextView
     private lateinit var tvAvgCadence: TextView
     private lateinit var tvDistance: TextView
+
+    // 저장(POST) 연동: ViewModel 주입
+    private val vm: ResultViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -133,14 +141,17 @@ class ResultActivity : AppCompatActivity() {
         }
 
         // 5) 정확도/평균/거리 계산 및 표시
+        var accuracyDouble = 0.0
         if (cadenceList.isNotEmpty()) {
             val within = cadenceList.count { abs(it - targetCadence) <= 5 }
             val accuracy = within * 100 / cadenceList.size
+            accuracyDouble = within * 100.0 / cadenceList.size   // ← 서버 전송용(Double)
             tvAccuracy.text = "±${accuracy}%"
             val avgCad = cadenceList.sum() / cadenceList.size
             tvAvgCadence.text = avgCad.toString()
             tvDistance.text = String.format("%.2f km", distance)
         } else {
+            accuracyDouble = 0.0
             tvAccuracy.text = "±0%"
             tvAvgCadence.text = "0"
             tvDistance.text = String.format("%.2f km", distance)
@@ -157,16 +168,70 @@ class ResultActivity : AppCompatActivity() {
             songContainer.addView(view)
         }
 
-        // 7) 완료 버튼
-        findViewById<Button>(R.id.resultConfirmButton)
-            .setOnClickListener {
-                Intent(this, RootActivity::class.java).apply {
-                    putExtra("targetFragment", "home")
-                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    startActivity(this)
-                    finish()
+        // 7) 완료 버튼 → 저장(POST) 호출로 교체 (변경)
+        findViewById<Button>(R.id.resultConfirmButton).setOnClickListener {
+            it.isEnabled = false // 중복 클릭 방지
+
+            // 1) runId: 인텐트 우선, 없으면 타임스탬프 대체
+            val runId = intent.getStringExtra("runId") ?: System.currentTimeMillis().toString()
+
+            // 2) 호흡 비율(정상/비정상 %) 계산
+            val abnormalTotal = counts.patternOnly + counts.organOnly + counts.bothMismatch
+            val totalBreath = counts.normal + abnormalTotal
+            val breathNormalPercent =
+                if (totalBreath > 0) ((counts.normal * 100.0) / totalBreath).toInt() else 0
+            val breathAbnormalPercent = 100 - breathNormalPercent
+
+            // 3) 케이던스 통계
+            val avgCadenceDouble = if (cadenceList.isNotEmpty()) cadenceList.average() else 0.0
+            val maxCadence = cadenceList.maxOrNull() ?: 0
+            val minCadence = cadenceList.minOrNull() ?: 0
+
+            // 4) 음악 BPM 리스트 (없으면 빈 리스트)
+            val musicBpmList: List<Int> = emptyList()
+
+            // 5) 요청 바디 구성 (network 패키지 DTO 사용)
+            val req = RunResultRequest(
+                duration = elapsedSeconds,                                 // Int(초)
+                distance = distance,                                       // Double(km)
+                calories = intent.getDoubleExtra("calorie", 0.0).toInt(),  // Int(kcal)
+                avgCadence = avgCadenceDouble,                             // Double(spm)
+                maxCadence = maxCadence,
+                minCadence = minCadence,
+                abnormalCount = abnormalTotal,
+                musicCount = songs.size,
+                cadenceAccuracy = accuracyDouble,                          // Double(%)
+                breathNormalAcc = breathNormalPercent,                     // Int(%)
+                breathAbnormalAcc = breathAbnormalPercent,                 // Int(%)
+                musicBpmList = musicBpmList,
+                feedbackSummary = FeedbackSummary(
+                    type1 = counts.patternOnly,                            // 호흡 패턴만 불일치
+                    type2 = counts.organOnly,                              // 호흡 기관만 불일치
+                    type3 = counts.bothMismatch                            // 둘 다 불일치
+                ),
+                cadenceHistory = cadenceList.toList()
+            )
+
+            // 6) 저장 호출 (토큰 필요 시 token="Bearer ..." 전달)
+            vm.save(runId="24", req, token = null)  //합치게 되면 runId="" 없애고 runId만 남기기
+        }
+
+        // 8) 저장 상태 관찰 → 성공 시 홈 이동 (추가)
+        vm.saveState.observe(this) { state ->
+            when (state) {
+                ResultViewModel.SaveState.Success -> {
+                    Toast.makeText(this, "결과가 저장되었습니다.", Toast.LENGTH_SHORT).show()
+                    finish()  // ← RootActivity(러닝 탭)로 자연스럽게 복귀
                 }
+                ResultViewModel.SaveState.Error -> {
+                    Toast.makeText(this, "저장 실패: 네트워크/서버를 확인하세요.", Toast.LENGTH_SHORT).show()
+                    findViewById<Button>(R.id.resultConfirmButton).isEnabled = true
+                }
+                ResultViewModel.SaveState.Saving -> { /* 로딩 표시 원하면 구현 */ }
+                else -> Unit
             }
+        }
+
     }
 
     // 호흡 파이차트 렌더링 함수
