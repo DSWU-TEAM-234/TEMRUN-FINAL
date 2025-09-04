@@ -1,13 +1,19 @@
 package com.temrun_finalprojects.result
 
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
-import android.widget.*
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -16,15 +22,21 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
-import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.LimitLine
-import com.github.mikephil.charting.data.*
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.PercentFormatter
 import com.temrun_finalprojects.BuildConfig
 import com.temrun_finalprojects.R
 import com.temrun_finalprojects.RootActivity
 import com.temrun_finalprojects.data.Preference
 import com.temrun_finalprojects.data.Song
+import com.temrun_finalprojects.network.FeedbackSummary
+import com.temrun_finalprojects.network.RunResultRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,7 +45,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import kotlin.math.abs
+import com.google.gson.GsonBuilder
 
 // 호흡 피드백 데이터
 data class BreathFeedbackCounts(
@@ -45,10 +57,15 @@ data class BreathFeedbackCounts(
 
 class ResultActivity : AppCompatActivity() {
 
-    private val client by lazy { OkHttpClient() }
-    private val mediaJson by lazy { "application/json; charset=utf-8".toMediaType() }
-    private val BASE_URL = "https://d07802f0f999.ngrok-free.app"
+    // OkHttp
+    private val client: OkHttpClient = OkHttpClient()
+    private val mediaJson = "application/json; charset=utf-8".toMediaType()
+    private val BASE_URL = "https://339cdd456ce9.ngrok-free.app"
 
+    // 저장(POST) 연동: ViewModel 주입
+    private val vm: ResultViewModel by viewModels()
+
+    // UI
     private lateinit var cadenceChart: LineChart
     private lateinit var tvAccuracy: TextView
     private lateinit var tvAvgCadence: TextView
@@ -78,6 +95,7 @@ class ResultActivity : AppCompatActivity() {
 
         // 데이터 수신
         val debugStub = intent.getBooleanExtra(EXTRA_DEBUG_STUB, false)
+
         val receivedSongs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getParcelableArrayListExtra("songs", Song::class.java)
         } else {
@@ -106,9 +124,8 @@ class ResultActivity : AppCompatActivity() {
         )
 
         // 뷰 바인딩
-        findViewById<TextView>(R.id.ResultTimeText).text = String.format(
-            "%02d:%02d", elapsedSeconds / 60, elapsedSeconds % 60
-        )
+        findViewById<TextView>(R.id.ResultTimeText).text =
+            String.format("%02d:%02d", elapsedSeconds / 60, elapsedSeconds % 60)
         findViewById<TextView>(R.id.ResultBPMText).text = avgBPM.toString()
         findViewById<TextView>(R.id.ResultCalorieText).text = calorie.toString()
 
@@ -121,9 +138,11 @@ class ResultActivity : AppCompatActivity() {
 
         // 케이던스 LineChart
         cadenceChart = findViewById(R.id.chartCadence)
+        cadenceChart.setNoDataText("케이던스 데이터가 없어요")
         tvAccuracy = findViewById(R.id.textCadenceAccuracy)
         tvAvgCadence = findViewById(R.id.textCadenceValue)
         tvDistance = findViewById(R.id.textCadencePrecision)
+        tvDistance.text = String.format("%.2f km", distance)
 
         if (cadenceList.isNotEmpty()) {
             val entries = cadenceList.mapIndexed { idx, value ->
@@ -131,13 +150,15 @@ class ResultActivity : AppCompatActivity() {
             }
             val dataSet = LineDataSet(entries, "케이던스").apply {
                 color = ContextCompat.getColor(this@ResultActivity, R.color.teal_700)
-                setDrawCircles(true); circleRadius = 3f
-                setDrawValues(false); lineWidth = 2f
+                setDrawCircles(true)
+                circleRadius = 3f
+                setDrawValues(false)
+                lineWidth = 2f
             }
             cadenceChart.data = LineData(dataSet)
-            // 2) 목표 케이던스 기준선 추가
-            cadenceChart.axisLeft.apply {
 
+            // 목표 케이던스 기준선
+            cadenceChart.axisLeft.apply {
                 axisMinimum = 0f
                 axisMaximum = (targetCadence + 20).toFloat()
                 val limitLine = LimitLine(targetCadence.toFloat(), "목표($targetCadence)").apply {
@@ -149,43 +170,16 @@ class ResultActivity : AppCompatActivity() {
                 }
                 addLimitLine(limitLine)
             }
-            cadenceChart.invalidate()
-        } else {
-            // 데이터 없을 때 처리
-            findViewById<TextView>(R.id.textCadenceValue).text = "0"
-            findViewById<TextView>(R.id.textCadenceAccuracy).text = "±0%"
-        }
 
-        Log.d("ResultActivity", "cadenceList size=${cadenceList.size}")
-
-        val chart = findViewById<LineChart>(R.id.chartCadence)
-        chart.setNoDataText("케이던스 데이터가 없어요")
-
-        // 정확도/평균 케이던스/거리
-        if (cadenceList.isNotEmpty()) {
-            // 1) Entry 생성 및 LineDataSet 생성
-            val entries = cadenceList.mapIndexed { idx, value -> Entry(idx.toFloat(), value.toFloat()) }
-            val dataSet = LineDataSet(entries, "케이던스").apply {
-                color = ContextCompat.getColor(this@ResultActivity, R.color.teal_700)
-                setDrawCircles(true)
-                circleRadius = 3f
-                setDrawValues(false)
-                lineWidth = 2f
-            }
-
-            // 2) 차트에 데이터 할당
-            cadenceChart.data = LineData(dataSet)
-
-            // 3) 축 및 레전드 설정 (생략)
-
-            // 4) 데이터 변경, 차트 갱신
             cadenceChart.data?.notifyDataChanged()
             cadenceChart.notifyDataSetChanged()
             cadenceChart.invalidate()
+
+            tvAvgCadence.text = cadenceList.average().toInt().toString()
+            tvAccuracy.text = "±0%" // 임시 표시
         } else {
             tvAccuracy.text = "±0%"
             tvAvgCadence.text = "0"
-            tvDistance.text = String.format("%.2f km", distance)
         }
 
         // 노래 카드 + 좋아요/싫어요
@@ -227,6 +221,9 @@ class ResultActivity : AppCompatActivity() {
             songContainer.addView(view)
         }
 
+        // 임시: 정확도 값(서버 저장용)
+        val accuracyDouble = 0.0
+
         // 완료 버튼 (서버 전송)
         val resultConfirmButton: Button = findViewById(R.id.resultConfirmButton)
         resultConfirmButton.setOnClickListener {
@@ -237,6 +234,57 @@ class ResultActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            // 호흡 비율(정상/비정상 %)
+            val abnormalTotal = counts.patternOnly + counts.organOnly + counts.bothMismatch
+            val totalBreath = counts.normal + abnormalTotal
+            val breathNormalPercent =
+                if (totalBreath > 0) ((counts.normal * 100.0) / totalBreath).toInt() else 0
+            val breathAbnormalPercent = 100 - breathNormalPercent
+
+            // 케이던스 통계
+            val avgCadenceDouble = if (cadenceList.isNotEmpty()) cadenceList.average() else 0.0
+            val maxCadence = cadenceList.maxOrNull() ?: 0
+            val minCadence = cadenceList.minOrNull() ?: 0
+
+            // 음악 BPM 리스트 (없으면 빈 리스트)
+            val musicBpmList: List<Int> = emptyList()
+
+            // 요청 바디 구성 (network 패키지 DTO 사용)
+            val req = RunResultRequest(
+                duration = elapsedSeconds,                                 // Int(초)
+                distance = distance,                                       // Double(km)
+                calories = calorie.toInt(),                                // Int(kcal)
+                avgCadence = avgCadenceDouble,                             // Double(spm)
+                maxCadence = maxCadence,
+                minCadence = minCadence,
+                abnormalCount = abnormalTotal,
+                musicCount = songsForUi.size,
+                cadenceAccuracy = accuracyDouble,                          // Double(%)
+                breathNormalAcc = breathNormalPercent,                     // Int(%)
+                breathAbnormalAcc = breathAbnormalPercent,                 // Int(%)
+                musicBpmList = musicBpmList,
+                feedbackSummary = FeedbackSummary(
+                    type1 = counts.patternOnly,                            // 호흡 패턴만 불일치
+                    type2 = counts.organOnly,                              // 호흡 기관만 불일치
+                    type3 = counts.bothMismatch                            // 둘 다 불일치
+                ),
+                cadenceHistory = cadenceList.toList()
+            )
+
+            // 버튼 비활성화
+            setLoading(true, resultConfirmButton)
+
+            // 요청 바디 구성 (req 만든 직후)
+            val gson = GsonBuilder().setPrettyPrinting().create()
+            val runJson = gson.toJson(req)
+            logLong("RunResultPayload", ">>> POST $BASE_URL/api/runs/$runId/results\n$runJson")
+
+            // 저장 호출 (토큰 필요 시 token="Bearer ..." 전달)
+            vm.save(runId, req, token = null)
+
+
+
+            // 노래 피드백(있을 때만 전송)
             val items = songsForUi.mapIndexedNotNull { i, s ->
                 val rating = when (preferences[i]) {
                     Preference.LIKE -> 5
@@ -253,31 +301,52 @@ class ResultActivity : AppCompatActivity() {
                 }
             }
 
-            if (items.isEmpty()) {
-                Toast.makeText(this, "보낼 피드백이 없습니다.", Toast.LENGTH_SHORT).show()
-                goHome()
-                return@setOnClickListener
-            }
-
-            val url = "$BASE_URL/api/runs/feedback"
-            setLoading(true, resultConfirmButton)
-
-            lifecycleScope.launch(Dispatchers.IO) {
-                var failed = false
-                items.forEachIndexed { idx, obj ->
-                    val ok = postOne(url, obj)
-                    if (!ok) failed = true
-                }
-                withContext(Dispatchers.Main) {
-                    setLoading(false, resultConfirmButton)
-                    if (!failed) {
-                        Toast.makeText(this@ResultActivity, "피드백 전송 완료", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this@ResultActivity, "일부 전송 실패", Toast.LENGTH_LONG).show()
+            if (items.isNotEmpty()) {
+                val url = "$BASE_URL/api/runs/feedback"
+                lifecycleScope.launch(Dispatchers.IO) {
+                    var failed = false
+                    items.forEach { obj ->
+                        val ok = postOne(url, obj)
+                        if (!ok) failed = true
                     }
+                    withContext(Dispatchers.Main) {
+                        if (!failed) {
+                            Toast.makeText(this@ResultActivity, "피드백 전송 완료", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this@ResultActivity, "일부 피드백 전송 실패", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
+        }
+
+        // 저장 상태 관찰 → 성공 시 홈 이동
+        vm.saveState.observe(this) { state ->
+            when (state) {
+                ResultViewModel.SaveState.Success -> {
+                    Toast.makeText(this, "결과가 저장되었습니다.", Toast.LENGTH_SHORT).show()
+                    setLoading(false, findViewById(R.id.resultConfirmButton))
                     goHome()
                 }
+                ResultViewModel.SaveState.Error -> {
+                    Toast.makeText(this, "저장 실패: 네트워크/서버를 확인하세요.", Toast.LENGTH_SHORT).show()
+                    findViewById<Button>(R.id.resultConfirmButton).isEnabled = true
+                }
+                ResultViewModel.SaveState.Saving -> { /* 로딩표시 필요시 구현 */ }
+                else -> Unit
             }
+        }
+    }
+
+    //긴 로그가 잘리지 않게 도우미 함수 추가
+    private fun logLong(tag: String, msg: String) {
+        if (!BuildConfig.DEBUG) return
+        val chunkSize = 3500
+        var i = 0
+        while (i < msg.length) {
+            val end = (i + chunkSize).coerceAtMost(msg.length)
+            Log.d(tag, msg.substring(i, end))
+            i = end
         }
     }
 
@@ -290,7 +359,7 @@ class ResultActivity : AppCompatActivity() {
                 .build()
             client.newCall(req).execute().use { resp ->
                 Log.d("SongFeedbackDebug", ">>> POST $url\nREQ=$obj\n<<< ${resp.code}")
-                resp.isSuccessful
+                return resp.isSuccessful
             }
         } catch (e: Exception) {
             Log.e("SongFeedbackDebug", "요청 오류", e)
@@ -308,7 +377,7 @@ class ResultActivity : AppCompatActivity() {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         startActivity(intent)
-        finish()
+        this.finish()
     }
 
     private fun makeStubSongs(): ArrayList<Song> {
@@ -321,24 +390,31 @@ class ResultActivity : AppCompatActivity() {
 
     private fun renderBreathCardAlways(chart: PieChart, ratioView: TextView, counts: BreathFeedbackCounts) {
         val abnormal = counts.patternOnly + counts.organOnly + counts.bothMismatch
+        chart.setUsePercentValues(true)
+
         if (abnormal <= 0) {
             val entries = listOf(PieEntry(1f, "정상"))
             val dataSet = PieDataSet(entries, "").apply {
                 colors = listOf(Color.parseColor("#7ED321"))
-                setDrawValues(false)
+                setDrawValues(false) // 값 숨김
             }
             chart.data = PieData(dataSet)
             chart.invalidate()
             ratioView.text = "정상 : 비정상\n  10 : 0"
             return
         }
+
         val entries = mutableListOf<PieEntry>()
         if (counts.patternOnly > 0) entries.add(PieEntry(counts.patternOnly.toFloat(), "호흡 패턴만 불일치"))
         if (counts.organOnly > 0) entries.add(PieEntry(counts.organOnly.toFloat(), "호흡 기관만 불일치"))
         if (counts.bothMismatch > 0) entries.add(PieEntry(counts.bothMismatch.toFloat(), "둘 다 불일치"))
 
         val dataSet = PieDataSet(entries, "").apply {
-            colors = listOf(Color.parseColor("#4A90E2"), Color.parseColor("#7ED321"), Color.parseColor("#FF4D4F"))
+            colors = listOf(
+                Color.parseColor("#4A90E2"),
+                Color.parseColor("#7ED321"),
+                Color.parseColor("#FF4D4F")
+            )
             sliceSpace = 2f
             valueTextSize = 12f
         }

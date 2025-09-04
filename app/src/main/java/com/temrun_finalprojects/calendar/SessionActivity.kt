@@ -6,6 +6,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -42,8 +43,9 @@ class SessionActivity : AppCompatActivity(), SessionAdapter.OnSessionClickListen
     companion object {
         const val EXTRA_DATE = "extra_date"
         // 교체
-        private const val BASE_URL = "https://d07802f0f999.ngrok-free.app"
-        private const val USER_ID = "user123"
+        private const val BASE_URL = "https://339cdd456ce9.ngrok-free.app"
+        //private const val USER_ID = "user123"
+
     }
 
     private lateinit var tvSelectedDate: TextView
@@ -98,10 +100,12 @@ class SessionActivity : AppCompatActivity(), SessionAdapter.OnSessionClickListen
             .build()
 
         val api = retrofit.create(RunsApiService::class.java)
+        val userId = getSharedPreferences("AppUser", MODE_PRIVATE)
+            .getString("user_id", null) ?: "u12345"
 
         lifecycleScope.launch {
             try {
-                val sessions = api.getRunsByDate(USER_ID, date)
+                val sessions = api.getRunsByDate(userId, date)
                 progress.visibility = View.GONE
 
                 if (sessions.isEmpty()) {

@@ -149,7 +149,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     enum class SensorType { ACCELEROMETER, GYROSCOPE }
 
     // TODO: 서버 재기동 시 교체
-    private val BASE_URL ="https://d07802f0f999.ngrok-free.app"
+    private val BASE_URL ="https://339cdd456ce9.ngrok-free.app"
     // 러닝 세션 시작 API
     private val START_RUN_URL = "$BASE_URL/api/runs/start"
     // 추천 트랙 API
