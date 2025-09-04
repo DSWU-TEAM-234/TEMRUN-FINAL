@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.graphics.Color
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -15,6 +16,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.bumptech.glide.Glide
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
@@ -28,12 +30,17 @@ import com.temrun_finalprojects.RootActivity
 import com.temrun_finalprojects.data.Song
 import kotlin.math.abs
 
+// 호흡 피드백 데이터(정상 + 비정상 세부 분포)
+data class BreathFeedbackCounts(
+    val normal: Int,        // 정상호흡
+    val patternOnly: Int,   // 호흡 패턴만 틀린 경우
+    val organOnly: Int,     // 호흡 기관만 틀린 경우
+    val bothMismatch: Int   // 둘 다 틀린 경우
+)
+
 class ResultActivity : AppCompatActivity() {
 
     private lateinit var cadenceChart: LineChart
-    private lateinit var pieChartBreathing: PieChart
-    private lateinit var tvPatternNormal: TextView
-    private lateinit var tvPatternAbnormal: TextView
     private lateinit var tvAccuracy: TextView
     private lateinit var tvAvgCadence: TextView
     private lateinit var tvDistance: TextView
@@ -52,15 +59,17 @@ class ResultActivity : AppCompatActivity() {
         val songs = intent.getParcelableArrayListExtra<Song>("songs") ?: arrayListOf()
         val elapsedSeconds = intent.getIntExtra("time", 0)
         val avgBPM = intent.getIntExtra("averageBPM", 0)
-        val distance = intent.getDoubleExtra("distance", 0.0)      // 추가된 부분
+        val distance = intent.getDoubleExtra("distance", 0.0)
         val cadenceList = intent.getIntegerArrayListExtra("cadenceDataList") ?: arrayListOf()
         val targetCadence = intent.getIntExtra("targetCadence", 160)
 
-        val breathNormalAcc = intent.getIntExtra("breathNormalAcc", 0)
-        val breathAbnormalAcc = intent.getIntExtra("breathAbnormalAcc", 0)
-        val breathAbnl1 = intent.getIntExtra("breathAbnormalType1", 0)
-        val breathAbnl2 = intent.getIntExtra("breathAbnormalType2", 0)
-        val breathAbnl3 = intent.getIntExtra("breathAbnormalType3", 0)
+        // 호흡 데이터 수신
+        val counts = BreathFeedbackCounts(
+            normal = intent.getIntExtra("breath_normal", 0),
+            patternOnly = intent.getIntExtra("breath_patternOnly", 0),
+            organOnly = intent.getIntExtra("breath_organOnly", 0),
+            bothMismatch = intent.getIntExtra("breath_bothMismatch", 0)
+        )
 
         // 2) 뷰 바인딩
         findViewById<TextView>(R.id.ResultTimeText).text = String.format(
@@ -72,42 +81,17 @@ class ResultActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.ResultCalorieText).text =
             intent.getDoubleExtra("calorie", 0.0).toString()
 
-        pieChartBreathing = findViewById(R.id.pieChartBreathing)
-        tvPatternNormal = findViewById(R.id.textPatterNormal)
-        tvPatternAbnormal = findViewById(R.id.textPatternAbnormal)
-
+        cadenceChart = findViewById(R.id.chartCadence)
         tvAccuracy = findViewById(R.id.textCadenceAccuracy)
         tvAvgCadence = findViewById(R.id.textCadenceValue)
         tvDistance = findViewById(R.id.textCadencePrecision)
 
-        cadenceChart = findViewById(R.id.chartCadence)
         val songContainer = findViewById<LinearLayout>(R.id.songLinearLayout)
 
         // 3) 호흡 PieChart
-        val pieEntries = listOf(
-            PieEntry(breathAbnl1.toFloat(), "타입1"),
-            PieEntry(breathAbnl2.toFloat(), "타입2"),
-            PieEntry(breathAbnl3.toFloat(), "타입3")
-        )
-        val pieDs = PieDataSet(pieEntries, "").apply {
-            setColors(
-                ContextCompat.getColor(this@ResultActivity, R.color.teal_700),
-                ContextCompat.getColor(this@ResultActivity, R.color.purple_500),
-                ContextCompat.getColor(this@ResultActivity, R.color.orange_500)
-            )
-            valueFormatter = PercentFormatter(pieChartBreathing)
-            valueTextSize = 12f
-        }
-        pieChartBreathing.apply {
-            data = PieData(pieDs)
-            setUsePercentValues(true)
-            description.isEnabled = false
-            legend.isEnabled = true
-            animateY(600)
-            invalidate()
-        }
-        tvPatternNormal.text = breathNormalAcc.toString()
-        tvPatternAbnormal.text = breathAbnormalAcc.toString()
+        val breathChart = findViewById<PieChart>(R.id.breathPieChart)
+        val breathRatio = findViewById<TextView>(R.id.breathRatioText)
+        renderBreathCardAlways(breathChart, breathRatio, counts)
 
         // 4) 케이던스 LineChart
         val lineEntries = cadenceList.mapIndexed { i, c -> Entry(i.toFloat(), c.toFloat()) }
@@ -155,7 +139,6 @@ class ResultActivity : AppCompatActivity() {
             tvAccuracy.text = "±${accuracy}%"
             val avgCad = cadenceList.sum() / cadenceList.size
             tvAvgCadence.text = avgCad.toString()
-            // 실제 측정된 거리 사용
             tvDistance.text = String.format("%.2f km", distance)
         } else {
             tvAccuracy.text = "±0%"
@@ -185,4 +168,87 @@ class ResultActivity : AppCompatActivity() {
                 }
             }
     }
+
+    // 호흡 파이차트 렌더링 함수
+    private fun renderBreathCardAlways(
+        chart: PieChart,
+        ratioView: TextView,
+        counts: BreathFeedbackCounts
+    ) {
+        val abnormal = counts.patternOnly + counts.organOnly + counts.bothMismatch
+
+        if (abnormal <= 0) {
+            // 모두 정상
+            val entries = listOf(PieEntry(1f, "정상"))
+            val dataSet = PieDataSet(entries, "").apply {
+                colors = listOf(Color.parseColor("#7ED321")) // 초록
+                valueTextSize = 0f
+                setDrawValues(false)
+            }
+            chart.apply {
+                description.isEnabled = false
+                legend.isEnabled = false
+                setUsePercentValues(false)
+                isDrawHoleEnabled = true
+                holeRadius = 40f
+                transparentCircleRadius = 45f
+                data = PieData(dataSet)
+                invalidate()
+                animateY(600)
+            }
+            ratioView.text = "정상 : 비정상\n  10 : 0"
+            return
+        }
+
+        // 비정상 세부 분포 (0인 값 제외)
+        val entries = mutableListOf<PieEntry>()
+        if (counts.patternOnly > 0) entries.add(PieEntry(counts.patternOnly.toFloat(), "호흡 패턴만 불일치"))
+        if (counts.organOnly > 0) entries.add(PieEntry(counts.organOnly.toFloat(), "호흡 기관만 불일치"))
+        if (counts.bothMismatch > 0) entries.add(PieEntry(counts.bothMismatch.toFloat(), "둘 다 불일치"))
+
+        val dataSet = PieDataSet(entries, "").apply {
+            colors = listOf(
+                Color.parseColor("#4A90E2"), // 파랑
+                Color.parseColor("#7ED321"), // 초록
+                Color.parseColor("#FF4D4F")  // 빨강
+            )
+            sliceSpace = 2f
+            valueTextSize = 12f
+            valueTextColor = Color.BLACK
+        }
+
+        val data = PieData(dataSet).apply {
+            setValueFormatter(PercentFormatter(chart))
+            setValueTextSize(12f)
+            setValueTextColor(Color.BLACK)
+        }
+
+        chart.apply {
+            description.isEnabled = false
+            legend.isEnabled = true
+            legend.isWordWrapEnabled = true
+            legend.orientation = Legend.LegendOrientation.HORIZONTAL
+            legend.verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
+            legend.horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
+
+            setUsePercentValues(true)
+            isDrawHoleEnabled = true
+            holeRadius = 40f
+            transparentCircleRadius = 45f
+
+            setEntryLabelColor(Color.BLACK)
+            setEntryLabelTextSize(11f)
+
+            this.data = data
+            invalidate()
+            animateY(800)
+        }
+
+        // "정상 : 비정상" 비율 텍스트
+        val total = counts.normal + abnormal
+        val nReduced = if (total > 0) Math.round(counts.normal * 10.0 / total).toInt() else 0
+        val aReduced = 10 - nReduced
+        ratioView.text = "정상 : 비정상\n  $nReduced : $aReduced"
+    }
+
 }

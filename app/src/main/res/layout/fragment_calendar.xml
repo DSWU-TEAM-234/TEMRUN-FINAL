@@ -67,7 +67,7 @@
             android:id="@+id/textViewYear"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="2025"
+            android:text=""
             android:textSize="14sp"
             android:textColor="#4A4A4A" />
 
@@ -76,7 +76,7 @@
             android:id="@+id/textViewMonth"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="06"
+            android:text=""
             android:textSize="32sp"
             android:textStyle="bold"
             android:textColor="#1A1A1A"
@@ -117,7 +117,7 @@
                 android:id="@+id/textViewSummary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0:00 / 0 BPM / 0 kcal"
+                android:text=""
                 android:textSize="16sp"
                 android:textColor="#45AD5B"
                 android:layout_marginTop="2dp"

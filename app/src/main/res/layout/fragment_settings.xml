@@ -107,7 +107,7 @@
                             android:layout_height="wrap_content"
                             android:checked="true"
                             android:thumbTint="@color/green_selected"
-                            android:trackTint="@color/green_selected" />
+                            android:trackTint="@color/green_selected_track" />
                     </LinearLayout>
 
                     <!-- 구분선 -->
@@ -134,7 +134,7 @@
                             android:layout_height="wrap_content"
                             android:checked="false"
                             android:thumbTint="@color/green_selected"
-                            android:trackTint="@color/green_selected" />
+                            android:trackTint="@color/green_selected_track" />
                     </LinearLayout>
 
                     <!-- 구분선 -->
@@ -161,7 +161,7 @@
                             android:layout_height="wrap_content"
                             android:checked="true"
                             android:thumbTint="@color/green_selected"
-                            android:trackTint="@color/green_selected" />
+                            android:trackTint="@color/green_selected_track" />
                     </LinearLayout>
 
                     <!-- 구분선 -->
