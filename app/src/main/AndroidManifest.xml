@@ -51,6 +51,9 @@
             android:name=".result.ResultActivity"
             android:exported="false" />
         <activity
+            android:name=".calendar.SessionActivity"
+            android:exported="false" />
+        <activity
             android:name=".game.GameActivity"
             android:exported="false" /> <!-- ✅ selectActivity를 앱 시작 화면으로 설정 -->
         <!-- ✅ MainActivity는 그냥 Activity로만 등록 -->

@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.implementation
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -49,6 +50,7 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        dataBinding = true
     }
 }
 
@@ -83,6 +85,30 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.0")
     implementation("androidx.browser:browser:1.5.0")
     implementation ("com.squareup.okhttp3:okhttp:4.12.0")
+
+    implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")// 그래프 그리기
+
+    implementation ("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation ("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.14")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    // Pie Chart
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    // Retrofit + Gson
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+    // OkHttp 로깅
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // 코루틴 + ViewModel
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
+
+    //Fragment 확장(KTX) - by viewModels() 등
+    implementation("androidx.fragment:fragment-ktx:1.8.2")
+
 
 
     implementation("androidx.core:core-splashscreen:1.0.0")

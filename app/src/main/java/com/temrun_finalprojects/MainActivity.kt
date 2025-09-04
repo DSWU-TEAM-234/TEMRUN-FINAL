@@ -8,6 +8,7 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
@@ -19,6 +20,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.*
+import android.telecom.VideoProfile.isPaused
 import android.util.Log
 import android.view.View
 import android.view.ViewTreeObserver
@@ -35,6 +37,8 @@ import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.ContextCompat.getSystemService
+import androidx.core.content.ContextCompat.registerReceiver
 import com.skyfishjy.library.RippleBackground
 import com.temrun_finalprojects.breathing.audio.FeedbackTTS
 import com.prolificinteractive.materialcalendarview.BuildConfig
@@ -55,6 +59,7 @@ import java.util.concurrent.Executors
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
+import com.temrun_finalprojects.data.BreathResultCount
 
 // 칼만 필터 클래스 정의
 class KalmanFilter1D(
@@ -80,9 +85,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var accelerometer: Sensor? = null
     private var gyroscope: Sensor? = null
     private var tflite: Interpreter? = null
+    private val cadenceDataList = mutableListOf<Int>()  // 실시간 케이던스 데이터 저장
+    private var targetCadence = 160  // 목표 케이던스 (러닝 시작 시 설정값)
 
     // 케이던스 모델 관련
-    private val modelName = "model_0528_5s.tflite"
+    private val modelName = "model_0811_5s.tflite"
     private val windowSizeMillis = 5000L
     private val slideIntervalMillis = 1000L
     private val sensorBuffer = mutableListOf<Triple<Long, SensorType, FloatArray>>()
@@ -142,7 +149,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     enum class SensorType { ACCELEROMETER, GYROSCOPE }
 
     // TODO: 서버 재기동 시 교체
-    private val BASE_URL ="https://4a0bc02d836c.ngrok-free.app"
+    private val BASE_URL ="https://d07802f0f999.ngrok-free.app"
     // 러닝 세션 시작 API
     private val START_RUN_URL = "$BASE_URL/api/runs/start"
     // 추천 트랙 API
@@ -256,6 +263,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             val calorieToSend = calorie
             val distanceToSend = distance.toFloat()
             val avgBpmToSend = if (bpmList.isNotEmpty()) bpmList.average().toInt() else 0
+            val targetCadence = cadence.toInt()
 
             // 3) 결과 화면으로 이동
             val intent = Intent(this, ResultActivity::class.java).apply {
@@ -264,6 +272,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 putExtra("calorie", calorieToSend)
                 putExtra("distance", distanceToSend)
                 putExtra("averageBPM", avgBpmToSend)
+                putExtra("targetCadence", targetCadence)
+                putIntegerArrayListExtra("cadenceDataList", ArrayList(cadenceDataList))
+
+
+//                intent.putExtra("breath_normal", breathResultCount.normal)
+//                intent.putExtra("breath_patternOnly", breathResultCount.patternOnly)
+//                intent.putExtra("breath_organOnly", breathResultCount.organOnly)
+//                intent.putExtra("breath_bothMismatch", breathResultCount.bothMismatch)
             }
             startActivity(intent)
         }
@@ -682,6 +698,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
                     runOnUiThread {
                         cadenceTextView.text = "$finalPrediction"
+                        if (!isPaused) {
+                            cadenceDataList.add(finalPrediction)
+                        }
                         val bpmDiff = kotlin.math.abs(finalPrediction - currentBpm)
                         val cadenceFrame = findViewById<FrameLayout>(R.id.cadenceFrame)
                         if (bpmDiff >= 5) {

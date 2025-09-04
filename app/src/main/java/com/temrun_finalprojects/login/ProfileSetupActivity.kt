@@ -24,7 +24,7 @@ class ProfileSetupActivity : AppCompatActivity() {
     private val SIGNUP_DEBUG = false
 
     // TODO: 서버 재기동 시 교체
-    private val BASE_URL = "https://4a0bc02d836c.ngrok-free.app"
+    private val BASE_URL = "https://d07802f0f999.ngrok-free.app"
     private val SIGNUP_URL = "$BASE_URL/api/auth/signup"
 
     override fun onCreate(savedInstanceState: Bundle?) {

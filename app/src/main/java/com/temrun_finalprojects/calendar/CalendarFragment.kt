@@ -1,23 +1,48 @@
 package com.temrun_finalprojects.calendar
 
+import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.temrun_finalprojects.databinding.FragmentCalendarBinding
 import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.prolificinteractive.materialcalendarview.CalendarMode
+import com.prolificinteractive.materialcalendarview.DayViewDecorator
+import com.prolificinteractive.materialcalendarview.DayViewFacade
+import com.prolificinteractive.materialcalendarview.MaterialCalendarView
+import com.temrun_finalprojects.databinding.FragmentCalendarBinding
 import com.temrun_finalprojects.util.DefaultDateStyleDecorator
-import com.temrun_finalprojects.result.RunningResultBottomSheet
-import com.temrun_finalprojects.util.SelectedDayDecorator
-import com.temrun_finalprojects.util.SingleDistanceDecorator
+import okhttp3.*
+import org.json.JSONObject
+import java.io.IOException
+import java.time.LocalDate
 
 class CalendarFragment : Fragment() {
 
     private var _binding: FragmentCalendarBinding? = null
     private val binding get() = _binding!!
 
-    private var selectedDate: CalendarDay? = null
+    private val runningDays = mutableSetOf<CalendarDay>()
+
+    companion object {
+        private const val EXTRA_DATE = "extra_date"
+        // 교체
+        private const val BASE_URL = "https://d07802f0f999.ngrok-free.app"
+        private const val USER_ID = "user123"
+        private val client = OkHttpClient()
+
+        private fun formatDate(day: CalendarDay): String {
+            return String.format("%04d-%02d-%02d", day.year, day.month, day.day)
+        }
+    }
+
+    // MaterialCalendarView.month는 0~11이므로 +1 보정
+    private fun normalizeMonth(monthZeroBased: Int): Int = monthZeroBased + 1
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,56 +56,103 @@ class CalendarFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.calendarView.setTopbarVisible(false)
         binding.calendarView.state().edit()
             .setFirstDayOfWeek(java.util.Calendar.SUNDAY)
+            .setCalendarDisplayMode(CalendarMode.MONTHS)
             .commit()
+        binding.calendarView.setShowOtherDates(MaterialCalendarView.SHOW_NONE)
 
-        // ✅ 날짜 텍스트 크기를 모든 날짜에 고정
+        // 1) 초기 헤더/데이터 로드
+        val current = binding.calendarView.currentDate
+        val initYear = current.year
+        val initMonth = normalizeMonth(current.month)
+        updateHeaderDate(LocalDate.of(initYear, initMonth, 1))
+        fetchCalendarData(initYear, initMonth)
+
+        // 2) 월 변경 시 헤더 및 데이터 갱신
+        binding.calendarView.setOnMonthChangedListener { _, date ->
+            val year = date.year
+            val month = normalizeMonth(date.month)
+            updateHeaderDate(LocalDate.of(year, month, 1))
+            fetchCalendarData(year, month)
+        }
+
         binding.calendarView.addDecorator(DefaultDateStyleDecorator(requireContext()))
 
-        val dummyData = mapOf(
-            CalendarDay.from(2025, 5, 5) to "2.8km",
-            CalendarDay.from(2025, 5, 7) to "6.7km",
-            CalendarDay.from(2025, 5, 9) to "6.9km",
-            CalendarDay.from(2025, 5, 11) to "3.9km",
-            CalendarDay.from(2025, 5, 16) to "6.8km",
-            CalendarDay.from(2025, 5, 23) to "5.8km",
-            CalendarDay.from(2025, 5, 25) to "3.7km",
-            CalendarDay.from(2025, 5, 26) to "3.9km",
-            CalendarDay.from(2025, 5, 29) to "2.9km"
-        )
-
-        for ((day, text) in dummyData) {
-            binding.calendarView.addDecorator(
-                SingleDistanceDecorator(requireContext(), day, text)
-            )
-        }
-
+        // 3) 날짜 클릭 시 선택 해제하고 기록 여부에 따라 처리
         binding.calendarView.setOnDateChangedListener { _, date, _ ->
-            val clickedDate = CalendarDay.from(date.year, date.month, date.day)
+            binding.calendarView.clearSelection()
 
-            selectedDate = if (clickedDate == selectedDate) null else clickedDate
+            val y = date.year
+            val m = normalizeMonth(date.month)
+            val d = date.day
+            val clickedDate = CalendarDay.from(y, m, d)
 
-            binding.calendarView.removeDecorators()
-
-            // 항상 날짜 숫자 크기 유지
-            binding.calendarView.addDecorator(DefaultDateStyleDecorator(requireContext()))
-
-            for ((day, text) in dummyData) {
-                binding.calendarView.addDecorator(
-                    SingleDistanceDecorator(requireContext(), day, text)
+            if (clickedDate in runningDays) {
+                startActivity(
+                    Intent(requireContext(), SessionActivity::class.java).apply {
+                        putExtra(EXTRA_DATE, formatDate(clickedDate))
+                    }
                 )
+            } else {
+                Toast.makeText(requireContext(), "선택한 날짜의 러닝 기록이 없어요.", Toast.LENGTH_SHORT).show()
             }
-
-            selectedDate?.let {
-                binding.calendarView.addDecorator(
-                    SelectedDayDecorator(requireContext(), it)
-                )
-            }
-
-            val bottomSheet = RunningResultBottomSheet()
-            bottomSheet.show(parentFragmentManager, bottomSheet.tag)
         }
+    }
+
+    private fun updateHeaderDate(date: LocalDate) {
+        binding.textViewYear.text = date.year.toString()
+        binding.textViewMonth.text = date.monthValue.toString().padStart(2, '0')
+    }
+
+    private fun fetchCalendarData(year: Int, month: Int) {
+        val monthParam = String.format("%04d-%02d", year, month)
+        val url = "$BASE_URL/api/users/$USER_ID/calendar?month=$monthParam"
+        val request = Request.Builder().url(url).get().build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                requireActivity().runOnUiThread {
+                    Toast.makeText(requireContext(), "캘린더 데이터를 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.body?.string()?.let { body ->
+                    val json = JSONObject(body)
+                    val dates = json.optJSONArray("runningDates") ?: return@let
+                    runningDays.clear()
+                    for (i in 0 until dates.length()) {
+                        val dayInt = dates.getString(i).toInt()
+                        runningDays.add(CalendarDay.from(year, month, dayInt))
+                    }
+
+                    val totalSec = json.optLong("totalDuration", 0L)
+                    val avgBpm = json.optInt("averageBpm", 0)
+                    val totalCal = json.optInt("totalCalories", 0)
+
+                    val hours = totalSec / 3600
+                    val minutes = (totalSec % 3600) / 60
+                    val durationStr = String.format("%d:%02d", hours, minutes)
+
+                    requireActivity().runOnUiThread {
+                        updateMonthSummary(durationStr, avgBpm, totalCal)
+                    }
+                }
+            }
+        })
+    }
+
+
+
+    private fun updateMonthSummary(
+        totalDuration: String,
+        averageBpm: Int,
+        totalCalories: Int
+    ) {
+        binding.textViewSummary.text =
+            "$totalDuration / ${averageBpm}BPM / ${totalCalories}kcal"
     }
 
     override fun onDestroyView() {
