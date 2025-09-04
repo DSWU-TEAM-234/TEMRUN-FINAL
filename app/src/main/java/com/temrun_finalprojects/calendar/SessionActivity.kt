@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.temrun_finalprojects.R
+import com.temrun_finalprojects.config.ApiConfig
 import com.temrun_finalprojects.result.RunningResultBottomSheet
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -42,7 +43,7 @@ class SessionActivity : AppCompatActivity(), SessionAdapter.OnSessionClickListen
     companion object {
         const val EXTRA_DATE = "extra_date"
         // 교체
-        private const val BASE_URL = "https://d07802f0f999.ngrok-free.app"
+//        private const val BASE_URL = "https://d07802f0f999.ngrok-free.app"
         private const val USER_ID = "user123"
     }
 
@@ -92,7 +93,8 @@ class SessionActivity : AppCompatActivity(), SessionAdapter.OnSessionClickListen
             .build()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl(BASE_URL)
+//            .baseUrl(BASE_URL)
+            .baseUrl(ApiConfig.getBaseUrl())
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

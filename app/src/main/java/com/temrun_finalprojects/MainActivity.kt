@@ -42,6 +42,7 @@ import androidx.core.content.ContextCompat.registerReceiver
 import com.skyfishjy.library.RippleBackground
 import com.temrun_finalprojects.breathing.audio.FeedbackTTS
 import com.prolificinteractive.materialcalendarview.BuildConfig
+import com.temrun_finalprojects.config.ApiConfig
 import com.temrun_finalprojects.data.Song
 import com.temrun_finalprojects.result.ResultActivity
 import kotlinx.coroutines.*
@@ -147,13 +148,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var breathingFeedbackTTS: FeedbackTTS? = null
 
     enum class SensorType { ACCELEROMETER, GYROSCOPE }
-
+/*
     // TODO: 서버 재기동 시 교체
     private val BASE_URL ="https://d07802f0f999.ngrok-free.app"
     // 러닝 세션 시작 API
     private val START_RUN_URL = "$BASE_URL/api/runs/start"
     // 추천 트랙 API
     private val RECO_URL = "$BASE_URL/api/recommend"
+*/
+    private fun getStartRunUrl() = ApiConfig.getStartRunUrl()
+    private fun getRecommendUrl() = ApiConfig.getRecommendUrl()
 
     // OkHttp (로깅 인터셉터 포함)
     private val httpClient: OkHttpClient by lazy {
@@ -885,7 +889,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         Log.d("RUN_START/PAYLOAD", payload.toString())
 
         val req = okhttp3.Request.Builder()
-            .url(START_RUN_URL)
+//            .url(START_RUN_URL)
+            .url(getStartRunUrl())
             .post(payload.toString().toRequestBody(JSON_MEDIA))
             .addHeader("Content-Type", "application/json")
             .addHeader("Accept", "application/json")
@@ -947,13 +952,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     ) {
         val limit = kotlin.math.ceil(durationSec / 180.0).toInt().coerceIn(1, 50)
 
-        val httpUrl = RECO_URL.toHttpUrlOrNull()
+//        val httpUrl = RECO_URL.toHttpUrlOrNull()
+        val httpUrl = getRecommendUrl().toHttpUrlOrNull()
             ?.newBuilder()
             ?.addQueryParameter("user_id", userId)
             ?.addQueryParameter("bpm", bpm.toString())
             ?.addQueryParameter("limit", limit.toString())
             ?.build() ?: run {
-            Log.e("RECO", "Invalid RECO_URL: $RECO_URL"); return
+//            Log.e("RECO", "Invalid RECO_URL: $RECO_URL"); return
+            Log.e("RECO", "Invalid RECO_URL"); return
         }
 
         val req = okhttp3.Request.Builder()

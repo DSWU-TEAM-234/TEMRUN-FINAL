@@ -23,8 +23,10 @@ import com.github.mikephil.charting.formatter.PercentFormatter
 import com.temrun_finalprojects.BuildConfig
 import com.temrun_finalprojects.R
 import com.temrun_finalprojects.RootActivity
+import com.temrun_finalprojects.config.ApiConfig
 import com.temrun_finalprojects.data.Preference
 import com.temrun_finalprojects.data.Song
+import com.temrun_finalprojects.util.Constants.BASE_URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,7 +49,8 @@ class ResultActivity : AppCompatActivity() {
 
     private val client by lazy { OkHttpClient() }
     private val mediaJson by lazy { "application/json; charset=utf-8".toMediaType() }
-    private val BASE_URL = "https://4a0bc02d836c.ngrok-free.app"
+//    private val BASE_URL = "https://4a0bc02d836c.ngrok-free.app"
+    private fun getFeedbackUrl() = ApiConfig.getFeedbackUrl()
 
     private lateinit var cadenceChart: LineChart
     private lateinit var tvAccuracy: TextView

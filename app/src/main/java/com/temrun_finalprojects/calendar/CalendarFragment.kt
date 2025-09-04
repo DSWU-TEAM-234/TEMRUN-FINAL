@@ -15,6 +15,7 @@ import com.prolificinteractive.materialcalendarview.CalendarMode
 import com.prolificinteractive.materialcalendarview.DayViewDecorator
 import com.prolificinteractive.materialcalendarview.DayViewFacade
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView
+import com.temrun_finalprojects.config.ApiConfig
 import com.temrun_finalprojects.databinding.FragmentCalendarBinding
 import com.temrun_finalprojects.util.DefaultDateStyleDecorator
 import okhttp3.*
@@ -32,7 +33,7 @@ class CalendarFragment : Fragment() {
     companion object {
         private const val EXTRA_DATE = "extra_date"
         // 교체
-        private const val BASE_URL = "https://d07802f0f999.ngrok-free.app"
+//        private const val BASE_URL = "https://d07802f0f999.ngrok-free.app"
         private const val USER_ID = "user123"
         private val client = OkHttpClient()
 
@@ -108,7 +109,8 @@ class CalendarFragment : Fragment() {
 
     private fun fetchCalendarData(year: Int, month: Int) {
         val monthParam = String.format("%04d-%02d", year, month)
-        val url = "$BASE_URL/api/users/$USER_ID/calendar?month=$monthParam"
+//        val url = "$BASE_URL/api/users/$USER_ID/calendar?month=$monthParam"
+        val url = ApiConfig.getCalendarUrl(USER_ID, monthParam)
         val request = Request.Builder().url(url).get().build()
 
         client.newCall(request).enqueue(object : Callback {

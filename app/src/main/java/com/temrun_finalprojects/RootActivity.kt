@@ -57,7 +57,7 @@ class RootActivity : AppCompatActivity() {
                 }
                 R.id.nav_account -> { //계정
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.fragmentContainer, AccountFragment())
+                        .replace(R.id.fragmentContainer, MyPageFragment()) // AccountFragment 로 수정 필요
                         .commit()
                     true
                 }

@@ -9,8 +9,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.temrun_finalprojects.R
 import com.temrun_finalprojects.RootActivity
+import com.temrun_finalprojects.config.ApiConfig
 import com.temrun_finalprojects.data.Preference
 import com.temrun_finalprojects.data.SongFeedback
+import com.temrun_finalprojects.util.Constants.BASE_URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -62,7 +64,8 @@ class SurveyActivity : AppCompatActivity() {
     // 환경
     private var userId: String? = null
     // TODO: 서버 재기동 시 교체
-    private val BASE_URL = "https://4a0bc02d836c.ngrok-free.app"
+//    private val BASE_URL = "https://4a0bc02d836c.ngrok-free.app"
+    private fun getFeedbackUrl() = ApiConfig.getFeedbackUrl()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

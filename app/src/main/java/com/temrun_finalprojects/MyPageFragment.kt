@@ -7,6 +7,8 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import com.temrun_finalprojects.config.ApiConfig
+import com.temrun_finalprojects.util.Constants.BASE_URL
 import okhttp3.*
 import java.io.IOException
 
@@ -14,7 +16,7 @@ class MyPageFragment : Fragment(R.layout.fragment_my_page) {
 
     private val client by lazy { OkHttpClient() }
     // TODO: 서버 재기동 시 교체
-    private val BASE_URL ="https://d07802f0f999.ngrok-free.app"
+    // private val BASE_URL ="https://d07802f0f999.ngrok-free.app"
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -43,6 +45,8 @@ class MyPageFragment : Fragment(R.layout.fragment_my_page) {
         }
 
         val req = Request.Builder()
+            .url(ApiConfig.getDeleteAccountUrl(userId))
+            .delete()
 
             .url("$BASE_URL/api/auth/$userId")
             .delete()

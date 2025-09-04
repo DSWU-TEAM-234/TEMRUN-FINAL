@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.temrun_finalprojects.R
+import com.temrun_finalprojects.config.ApiConfig
 import com.temrun_finalprojects.song_feedback.SurveyActivity
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
@@ -24,8 +25,9 @@ class ProfileSetupActivity : AppCompatActivity() {
     private val SIGNUP_DEBUG = false
 
     // TODO: 서버 재기동 시 교체
-    private val BASE_URL = "https://d07802f0f999.ngrok-free.app"
-    private val SIGNUP_URL = "$BASE_URL/api/auth/signup"
+//    private val BASE_URL = "https://d07802f0f999.ngrok-free.app"
+//    private val SIGNUP_URL = "$BASE_URL/api/auth/signup"
+    private fun getSignupUrl() = ApiConfig.getSignupUrl()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -125,7 +127,8 @@ class ProfileSetupActivity : AppCompatActivity() {
                 put("weight", w)
             }
 
-            Log.d("SignupDebug", "[REQUEST_URL] $SIGNUP_URL")
+//            Log.d("SignupDebug", "[REQUEST_URL] $SIGNUP_URL")
+            Log.d("SignupDebug", "[REQUEST_URL] ${getSignupUrl()}")
             Log.d("SignupDebug", "[REQUEST_BODY] ${pretty(debugPayload)}")
 
             // ---------------------------
@@ -151,7 +154,8 @@ class ProfileSetupActivity : AppCompatActivity() {
 
                 AlertDialog.Builder(this)
                     .setTitle("전송 예정 데이터(디버그)")
-                    .setMessage(pretty(debugPayload))
+//                    .setMessage(pretty(debugPayload))
+                    .setMessage("URL: ${getSignupUrl()}\n\nBody:\n${pretty(debugPayload)}")
                     .setPositiveButton("다음으로") { _, _ ->
                         Toast.makeText(this, "디버그 모드: 서버 호출 생략", Toast.LENGTH_SHORT).show()
                         goNext(displayName, profileImageForSend)
@@ -165,7 +169,11 @@ class ProfileSetupActivity : AppCompatActivity() {
             // 실제 서버 호출 (릴리즈/실사용 경로)
             // ---------------------------
             val body = payload.toString().toRequestBody("application/json".toMediaType())
-            val req = Request.Builder().url(SIGNUP_URL).post(body).build()
+//            val req = Request.Builder().url(SIGNUP_URL).post(body).build()
+            val req = Request.Builder()
+                .url(getSignupUrl())
+                .post(body)
+                .build()
 
             client.newCall(req).enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
