@@ -379,8 +379,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     calorieTextView.text = String.format("%.01f",calorie)
 
                     distance += 0.001
-                    distanceTextView.text = String.format("%.01f",distance)
+                    distanceTextView.text = String.format("%.2f",distance)
                 }
+                intent.putExtra("distance", distance)  // distance 값 ResultActivity로 전달함
             }
         }
     }

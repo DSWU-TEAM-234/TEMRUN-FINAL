@@ -16,7 +16,6 @@ import com.bumptech.glide.Glide
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.LimitLine
-import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -53,6 +52,7 @@ class ResultActivity : AppCompatActivity() {
         val songs = intent.getParcelableArrayListExtra<Song>("songs") ?: arrayListOf()
         val elapsedSeconds = intent.getIntExtra("time", 0)
         val avgBPM = intent.getIntExtra("averageBPM", 0)
+        val distance = intent.getDoubleExtra("distance", 0.0)      // 추가된 부분
         val cadenceList = intent.getIntegerArrayListExtra("cadenceDataList") ?: arrayListOf()
         val targetCadence = intent.getIntExtra("targetCadence", 160)
 
@@ -155,12 +155,12 @@ class ResultActivity : AppCompatActivity() {
             tvAccuracy.text = "±${accuracy}%"
             val avgCad = cadenceList.sum() / cadenceList.size
             tvAvgCadence.text = avgCad.toString()
-            val meters = avgCad / 60.0 * elapsedSeconds * 0.8
-            tvDistance.text = String.format("%.2f km", meters / 1000)
+            // 실제 측정된 거리 사용
+            tvDistance.text = String.format("%.2f km", distance)
         } else {
             tvAccuracy.text = "±0%"
             tvAvgCadence.text = "0"
-            tvDistance.text = "0 km"
+            tvDistance.text = String.format("%.2f km", distance)
         }
 
         // 6) 노래 카드

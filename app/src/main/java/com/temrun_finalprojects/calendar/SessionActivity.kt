@@ -41,7 +41,7 @@ class SessionActivity : AppCompatActivity(), SessionAdapter.OnSessionClickListen
 
     companion object {
         const val EXTRA_DATE = "extra_date"
-        private const val BASE_URL = "https://274247511994.ngrok-free.app"
+        private const val BASE_URL = "https://dc9355152871.ngrok-free.app"
         private const val USER_ID = "user123"
     }
 
