@@ -119,6 +119,7 @@ class ResultActivity : AppCompatActivity() {
         val calorie = intent.getDoubleExtra("calorie", 0.0)
         val cadenceList = intent.getIntegerArrayListExtra("cadenceDataList") ?: arrayListOf()
         val targetCadence = intent.getIntExtra("targetCadence", 160)
+        val accuracyDouble = intent.getDoubleExtra("cadenceAccuracy", 0.0)
 
         val counts = BreathFeedbackCounts(
             normal = intent.getIntExtra("breath_normal", 0),
@@ -180,7 +181,7 @@ class ResultActivity : AppCompatActivity() {
             cadenceChart.invalidate()
 
             tvAvgCadence.text = cadenceList.average().toInt().toString()
-            tvAccuracy.text = "±0%" // 임시 표시
+            tvAccuracy.text = String.format("±%.0f%%", accuracyDouble)
         } else {
             tvAccuracy.text = "±0%"
             tvAvgCadence.text = "0"
@@ -224,9 +225,6 @@ class ResultActivity : AppCompatActivity() {
 
             songContainer.addView(view)
         }
-
-        // 임시: 정확도 값(서버 저장용)
-        val accuracyDouble = 0.0
 
         // 완료 버튼 (서버 전송)
         val resultConfirmButton: Button = findViewById(R.id.resultConfirmButton)

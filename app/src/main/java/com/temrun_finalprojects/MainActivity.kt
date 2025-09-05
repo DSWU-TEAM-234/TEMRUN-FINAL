@@ -101,6 +101,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var latestPredictedCadence: Int = 0
 
     private val predictionHistory = mutableListOf<Int>()
+    private val finalPredictionHistory = mutableListOf<Int>() //  최종 걸음 예측값 리스트
+
     private val smoothingWindowSize = 5
     private val outlierThreshold = 50
 
@@ -272,6 +274,14 @@ override fun onCreate(savedInstanceState: Bundle?) {
         val avgBpmToSend = if (bpmList.isNotEmpty()) bpmList.average().toInt() else 0
         val targetCadence = cadence.toInt()
 
+        // finalPredictionHistory와 averageBPM의 차이 평균 계산
+        val averageBPM = bpmList.average().toInt()
+        val averageDifference = if (finalPredictionHistory.isNotEmpty()) {
+            finalPredictionHistory.map { kotlin.math.abs(it - averageBPM) }.average()
+        } else {
+            0.0  // finalPredictionHistory가 비어있으면 0 리턴
+        }
+
         // 3) 결과 화면으로 이동
         val intent = Intent(this, ResultActivity::class.java).apply {
             putParcelableArrayListExtra("songs", songsToSend)
@@ -280,6 +290,8 @@ override fun onCreate(savedInstanceState: Bundle?) {
             putExtra("distance", distanceToSend)
             putExtra("averageBPM", avgBpmToSend)
             putExtra("targetCadence", targetCadence)
+            putExtra("cadenceAccuracy", averageDifference)
+            Log.d("Checking_averageDifference", "averageDifference: $averageDifference")
             putIntegerArrayListExtra("cadenceDataList", ArrayList(cadenceDataList))
 
 
@@ -709,6 +721,12 @@ private val cadenceRunnable = object : Runnable {
                     if (!isPaused) {
                         cadenceDataList.add(finalPrediction)
                     }
+
+                    // 케이던스 정확도 계산을 위함
+                    // 배열에 케이던스 값 하나씩 추가하기
+                    finalPredictionHistory.add(finalPrediction)
+                    Log.d("Checking cadence history", "History: $finalPredictionHistory")
+
                     val bpmDiff = kotlin.math.abs(finalPrediction - currentBpm)
                     val cadenceFrame = findViewById<FrameLayout>(R.id.cadenceFrame)
                     if (bpmDiff >= 5) {
