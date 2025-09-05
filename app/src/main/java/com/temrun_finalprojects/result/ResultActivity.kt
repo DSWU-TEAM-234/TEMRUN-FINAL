@@ -46,6 +46,8 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import com.google.gson.GsonBuilder
+import com.temrun_finalprojects.config.ApiConfig
+import com.temrun_finalprojects.util.Constants.BASE_URL
 
 // 호흡 피드백 데이터
 data class BreathFeedbackCounts(
@@ -60,7 +62,9 @@ class ResultActivity : AppCompatActivity() {
     // OkHttp
     private val client: OkHttpClient = OkHttpClient()
     private val mediaJson = "application/json; charset=utf-8".toMediaType()
-    private val BASE_URL = "https://339cdd456ce9.ngrok-free.app"
+//    private val BASE_URL = "https://4382a6a5c3d2.ngrok-free.app"
+
+    private fun getFeedbackUrl() = ApiConfig.getFeedbackUrl()
 
     // 저장(POST) 연동: ViewModel 주입
     private val vm: ResultViewModel by viewModels()

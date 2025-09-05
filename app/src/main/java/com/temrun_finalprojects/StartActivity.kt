@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.temrun_finalprojects.login.LoginActivity
 import com.temrun_finalprojects.login.RegisterActivity
 import android.util.Log
+import androidx.core.content.ContentProviderCompat.requireContext
 import com.temrun_finalprojects.song_feedback.SurveyActivity
 
 class StartActivity : AppCompatActivity() {
@@ -17,6 +18,20 @@ class StartActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+
+////        혹시 꼬였을때 저장된 id지우기
+//        listOf("AppUser", "Spotify", "AppPrefs").forEach { name ->
+//            getSharedPreferences(name, android.content.Context.MODE_PRIVATE)
+//                .edit().clear().apply()
+//        }
+//
+////        디버그용
+//        startActivity(
+//            Intent(this, RootActivity::class.java))
+
+
 
         // 1) 이미 로그인된 사용자면 바로 Root로 이동
         if (!FORCE_REGISTER && isLoggedInLocally()) {

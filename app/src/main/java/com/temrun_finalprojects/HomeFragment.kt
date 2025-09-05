@@ -3,7 +3,11 @@ package com.temrun_finalprojects
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -21,6 +25,61 @@ class HomeFragment : Fragment() {
     private var total = 0
 
     private var recorder: AudioRecorder? = null
+
+    private fun getVibrator(): Vibrator? {
+        val ctx = context ?: return null
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // API 31+: VibratorManager 권장
+            val vm = ctx.getSystemService(VibratorManager::class.java)
+            vm?.defaultVibrator
+        } else {
+            // 구버전
+            @Suppress("DEPRECATION")
+            ctx.getSystemService(Vibrator::class.java) ?: ctx.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
+        }
+    }
+
+    /**
+     * 현재 cadence(BPM)에 맞춰 일정 박자만큼 진동을 내보낸다.
+     * - beats: 총 박자 수 (기본 8박)
+     * - pulseMs: 한 박자 진동 길이 (기본 35ms) — 너무 길면 박자 구분이 무너짐
+     */
+    private fun vibrateToBpm(bpm: Int, beats: Int = 8, pulseMs: Long = 35L) {
+        if (bpm <= 0) return
+        val vib = getVibrator() ?: return
+
+        // 한 박 간격(ms) = 60,000 / BPM
+        val interval = (60000f / bpm).toLong().coerceAtLeast(pulseMs + 1)
+
+        // Waveform: [대기, 진동, 대기, 진동, ...]
+        // 첫 요소는 "대기" 시간이므로 0으로 시작해 바로 첫 박 진동
+        val steps = beats * 2
+        val timings = LongArray(steps)
+        val amplitudes = IntArray(steps)
+
+        for (i in 0 until steps) {
+            if (i % 2 == 0) {
+                // 대기 구간
+                timings[i] = if (i == 0) 0L else (interval - pulseMs)
+                amplitudes[i] = 0
+            } else {
+                // 진동 구간
+                timings[i] = pulseMs
+                amplitudes[i] = 255 // 최대 진동 세기
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // createWaveform(timings, amplitudes, no repeat)
+            val effect = VibrationEffect.createWaveform(timings, amplitudes, -1)
+            vib.cancel() // 이전 패턴 중지
+            vib.vibrate(effect)
+        } else {
+            // 구버전: 진폭 제어 불가
+            @Suppress("DEPRECATION")
+            vib.vibrate(timings, -1)
+        }
+    }
 
 
     override fun onCreateView(
@@ -96,6 +155,12 @@ class HomeFragment : Fragment() {
 
         recorder = AudioRecorder(requireContext())
 
+        val btnBpmVibe = view.findViewById<Button>(R.id.btn_bpm_vibe)
+        btnBpmVibe?.setOnClickListener {
+            // 현재 선택된 cadenceValue 기준으로 8박, 박자당 35ms 진동
+            vibrateToBpm(cadenceValue, beats = 8, pulseMs = 35L)
+        }
+
         val btnConfirm = view.findViewById<Button>(R.id.btn_start_running)
         btnConfirm.setOnClickListener {
             val cadence = cadenceValue
@@ -153,5 +218,11 @@ class HomeFragment : Fragment() {
                 it.setTextColor(Color.BLACK)
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // 화면 떠날 때 남아있는 진동이 있으면 중지
+        getVibrator()?.cancel()
     }
 }

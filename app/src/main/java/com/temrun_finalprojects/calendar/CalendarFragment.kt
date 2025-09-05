@@ -22,6 +22,8 @@ import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
 import java.time.LocalDate
+import com.temrun_finalprojects.config.ApiConfig
+import com.temrun_finalprojects.util.Constants.BASE_URL
 
 class CalendarFragment : Fragment() {
 
@@ -33,8 +35,8 @@ class CalendarFragment : Fragment() {
     companion object {
         private const val EXTRA_DATE = "extra_date"
         // 교체
-        private const val BASE_URL = "https://339cdd456ce9.ngrok-free.app"
-        private const val USER_ID = "user123"
+//        private const val BASE_URL = "https://4382a6a5c3d2.ngrok-free.app"
+        //private const val USER_ID = "user123"
 
         private val client = OkHttpClient()
 
@@ -114,7 +116,8 @@ class CalendarFragment : Fragment() {
         val userId = prefs.getString("user_id", null) ?: "u12345"
 
         val monthParam = String.format("%04d-%02d", year, month)
-        val url = "$BASE_URL/api/users/$userId/calendar?month=$monthParam"
+//      val url = "$BASE_URL/api/users/$userId/calendar?month=$monthParam"
+        val url = ApiConfig.getCalendarUrl(userId, monthParam)
         val request = Request.Builder().url(url).get().build()
 
         client.newCall(request).enqueue(object : Callback {

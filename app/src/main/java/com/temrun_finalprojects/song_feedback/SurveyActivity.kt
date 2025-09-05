@@ -11,6 +11,7 @@ import com.temrun_finalprojects.R
 import com.temrun_finalprojects.RootActivity
 import com.temrun_finalprojects.data.Preference
 import com.temrun_finalprojects.data.SongFeedback
+import com.temrun_finalprojects.util.Constants.BASE_URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -19,6 +20,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import com.temrun_finalprojects.config.ApiConfig
+import com.temrun_finalprojects.util.Constants.BASE_URL
 
 class SurveyActivity : AppCompatActivity() {
 
@@ -62,7 +65,8 @@ class SurveyActivity : AppCompatActivity() {
     // 환경
     private var userId: String? = null
     // TODO: 서버 재기동 시 교체
-    private val BASE_URL = "https://339cdd456ce9.ngrok-free.app"
+//    private val BASE_URL = "https://4382a6a5c3d2.ngrok-free.app"
+    private fun getFeedbackUrl() = ApiConfig.getFeedbackUrl()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -186,7 +190,8 @@ class SurveyActivity : AppCompatActivity() {
             return
         }
 
-        val url = "$BASE_URL/api/runs/feedback"
+//        val url = "$BASE_URL/api/runs/feedback"
+        val url = ApiConfig.getFeedbackUrl()
 
         if (DEBUG_PREVIEW) {
             val sample = items.first().toString(2)
