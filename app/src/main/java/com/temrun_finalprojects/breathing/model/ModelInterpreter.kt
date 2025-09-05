@@ -5,6 +5,8 @@ import android.util.Log
 import com.temrun_finalprojects.breathing.audio.AudioProcessor
 import org.tensorflow.lite.Interpreter
 import java.io.IOException
+import kotlin.math.cos
+import kotlin.math.sin
 
 
 object ModelInterpreter {
@@ -12,24 +14,35 @@ object ModelInterpreter {
     private var abnormalCount = 0 // 비정상 감지 횟수
     private const val ABNORMAL_THRESHOLD = 5 // 비정상 임계값
 
-    // 모델1 관련 정규화 상수 (MainActivity.kt에서 가져옴)
-    private val metaMean = floatArrayOf(150.76959248f, 2.01040182f)
-    private val metaStd = floatArrayOf(10.08731071f, 0.81218989f)
+    // -----------------------------
+    // ✅ 개선된 모델1 정규화 기준 (3초 세그먼트 기준 학습 값)
+    // -----------------------------
+    private val bpmMean = floatArrayOf(0.36000514f, 0.2731695f)   // [sin, cos] mean
+    private val bpmStd  = floatArrayOf(0.55829337f, 0.69576092f)  // [sin, cos] std
 
-    // 호흡 패턴 매핑
+    // ✅ 호흡 패턴 → 원핫 벡터 매핑
     private val patternMap = mapOf(
-        "1_1" to 1f,
-        "2_1" to 2f,
-        "2_2" to 3f
+        "1:1" to floatArrayOf(1f, 0f, 0f),
+        "2:1" to floatArrayOf(0f, 1f, 0f),
+        "2:2" to floatArrayOf(0f, 0f, 1f)
     )
 
+    // -----------------------------
+    // ✅ 개선된 Model1 실행
+    // -----------------------------
     @Throws(IOException::class)
-    fun runModel1(context: Context?, features: AudioProcessor.FeatureSet, bpm: Int, pattern: String): String {
+    fun runModel1(
+        context: Context?,
+        features: AudioProcessor.FeatureSet,
+        bpm: Int,
+        pattern: String
+    ): String {
         Log.d(TAG, "Model 1 시작")
 
+        // 개선된 모델 파일 로드 (3초 세그먼트 학습 모델)
         val tflite = Interpreter(
             com.temrun_finalprojects.util.FileUtil.loadModelFile(
-                context!!, "cnn_mlp_breath_model_v1.tflite"
+                context!!, "improve_CNN_MLP_only_MetaData_3s.tflite"
             )
         )
 
@@ -46,12 +59,34 @@ object ModelInterpreter {
             }
         }
 
-        // 메타 데이터 정규화
-        val bpmFloat = bpm.toFloat()
-        val patternCode = patternMap[pattern] ?: 0f
-        val normBpm = (bpmFloat - metaMean[0]) / metaStd[0]
-        val normPattern = (patternCode - metaMean[1]) / metaStd[1]
-        val mlpInput = arrayOf(floatArrayOf(normBpm, normPattern))
+        // -----------------------------
+        // 2. BPM → sin/cos 변환 후 정규화
+        // -----------------------------
+        val bpmNorm = (bpm - 140f) / (190f - 140f)  // 140~190 범위를 [0~1]로 변환
+        val theta = 2 * Math.PI * bpmNorm
+        val sinBpm = sin(theta).toFloat()
+        val cosBpm = cos(theta).toFloat()
+
+        val sinNorm = (sinBpm - bpmMean[0]) / bpmStd[0]
+        val cosNorm = (cosBpm - bpmMean[1]) / bpmStd[1]
+
+        // -----------------------------
+        // 3. 호흡 패턴 → 원핫 벡터
+        // -----------------------------
+        val patternOneHot = patternMap[pattern] ?: floatArrayOf(0f, 0f, 0f)
+
+        // -----------------------------
+        // 4. 최종 MLP 입력 (sin, cos, one-hot 3차원 = 총 5차원)
+        // -----------------------------
+        val mlpInput = arrayOf(
+            floatArrayOf(
+                sinNorm,
+                cosNorm,
+                patternOneHot[0],
+                patternOneHot[1],
+                patternOneHot[2]
+            )
+        )
 
         // 모델 추론
         val output = Array(1) { FloatArray(1) }
@@ -86,7 +121,7 @@ object ModelInterpreter {
 
         val tflite = Interpreter(
             com.temrun_finalprojects.util.FileUtil.loadModelFile(
-                context!!, "model2_lite_v2.tflite"
+                context!!, "model2_lite_v1.tflite"
             )
         )
 

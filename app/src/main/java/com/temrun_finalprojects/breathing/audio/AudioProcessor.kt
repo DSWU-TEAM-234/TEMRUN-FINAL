@@ -155,20 +155,29 @@ abstract class AudioProcessor {
     }
 
     companion object {
-        /**
-         * From 오디오 버퍼: MFCC, RMS 특징 추출
-         *
-         * @param audioBuffer FloatArray : []16kHz Sampling] 오디오 float 버퍼
-         * @return FeatureSet : MFCC(13x75), RMS(75,)
-         */
+        // 기존 메서드는 모델2용으로 유지 (2초, 75프레임)
         fun extractFeatures(audioBuffer: FloatArray): FeatureSet {
-            val features = FeatureSet()
+            return extractFeaturesInternal(audioBuffer, 75) // 2초용
+        }
 
+        // 모델1용 새 메서드 (3초, 112프레임)
+        fun extractFeaturesForModel1(audioBuffer: FloatArray): FeatureSet {
+            return extractFeaturesInternal(audioBuffer, 112) // 3초용 (75 * 3/2 = 112.5 ≈ 112)
+        }
+
+        // 모델2용 새 메서드 (2초, 75프레임)
+        fun extractFeaturesForModel2(audioBuffer: FloatArray): FeatureSet {
+            return extractFeaturesInternal(audioBuffer, 75) // 2초용
+        }
+
+        // 내부 구현 메서드
+        private fun extractFeaturesInternal(audioBuffer: FloatArray, maxFrames: Int): FeatureSet {
+            val features = FeatureSet()
             val sampleRate = 16000
             val bufferSize = 512
             val overlap = 256
 
-            // Convert float[] to byte[] (PCM 16-bit signed little endian)
+            // 기존 ByteArray 변환 로직...
             val byteBuffer = ByteArray(audioBuffer.size * 2)
             for (i in audioBuffer.indices) {
                 val `val` = (audioBuffer[i] * Short.MAX_VALUE).toInt().toShort()
@@ -176,22 +185,13 @@ abstract class AudioProcessor {
                 byteBuffer[2 * i + 1] = ((`val`.toInt() shr 8) and 0xff).toByte()
             }
 
+            // 기존 AudioDispatcher 로직...
             val bais = ByteArrayInputStream(byteBuffer)
-
-            // ✅ 직접 AudioFormat 대신 TarsosDSPAudioFormat 사용
-            val format = TarsosDSPAudioFormat(
-                sampleRate.toFloat(),
-                16,  // sample size in bits
-                1,  // channels
-                true,  // signed
-                false // little endian
-            )
-
+            val format = TarsosDSPAudioFormat(sampleRate.toFloat(), 16, 1, true, false)
             val audioStream = UniversalAudioInputStream(bais, format)
             val dispatcher = AudioDispatcher(audioStream, bufferSize, overlap)
 
-            val mfccProcessor =
-                MFCC(bufferSize, sampleRate.toFloat(), 13, 40, 300f, (sampleRate / 2).toFloat())
+            val mfccProcessor = MFCC(bufferSize, sampleRate.toFloat(), 13, 40, 300f, (sampleRate / 2).toFloat())
             dispatcher.addAudioProcessor(mfccProcessor)
 
             val mfccList: MutableList<FloatArray> = ArrayList()
@@ -201,18 +201,18 @@ abstract class AudioProcessor {
                 override fun process(audioEvent: AudioEvent): Boolean {
                     val buffer = audioEvent.floatBuffer
 
-                    // RMS
+                    // RMS 계산
                     var sum = 0f
                     for (sample in buffer) sum += sample * sample
                     val rms = sqrt((sum / buffer.size).toDouble()).toFloat()
                     rmsList.add(rms)
 
                     // MFCC 계산
-                    val mfcc = mfccProcessor.mfcc // (13,)
+                    val mfcc = mfccProcessor.mfcc
                     mfccList.add(mfcc)
 
-                    // 최대 75프레임만 사용
-                    return mfccList.size < 75
+                    // maxFrames까지만 처리
+                    return mfccList.size < maxFrames
                 }
 
                 override fun processingFinished() {}
@@ -220,23 +220,23 @@ abstract class AudioProcessor {
 
             dispatcher.run()
 
-            // MFCC 결과 정리 (13 x 75)
+            // MFCC 결과 정리 (13 x maxFrames)
             val frameCount = mfccList.size
-            val mfccFrames = Array(13) { FloatArray(75) }
-            for (t in 0..74) {
-                val mfcc = if ((t < frameCount)) mfccList[t] else FloatArray(13) // 0-padding
+            val mfccFrames = Array(13) { FloatArray(maxFrames) }
+            for (t in 0 until maxFrames) {
+                val mfcc = if (t < frameCount) mfccList[t] else FloatArray(13)
                 for (i in 0..12) {
                     mfccFrames[i][t] = mfcc[i]
                 }
             }
 
-            // RMS 결과 정리 (75,)
-            val rmsFrames = FloatArray(75)
-            for (t in 0..74) {
-                rmsFrames[t] = if ((t < rmsList.size)) rmsList[t] else 0f
+            // RMS 결과 정리 (maxFrames,)
+            val rmsFrames = FloatArray(maxFrames)
+            for (t in 0 until maxFrames) {
+                rmsFrames[t] = if (t < rmsList.size) rmsList[t] else 0f
             }
 
-            // LogMelSpectrogram 추출 추가
+            // LogMelSpectrogram는 기존 로직 유지 (모델1에서만 사용)
             val pcmShorts = ShortArray(audioBuffer.size)
             for (i in audioBuffer.indices) {
                 pcmShorts[i] = (audioBuffer[i] * Short.MAX_VALUE).toInt().toShort()
@@ -248,9 +248,8 @@ abstract class AudioProcessor {
             features.rmsFrames = rmsFrames
             features.logMelSpectrogram = logMelSpec
 
-
             return features
         }
-
     }
+
 }

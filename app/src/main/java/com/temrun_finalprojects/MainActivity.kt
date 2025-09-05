@@ -29,6 +29,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -90,8 +91,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var tflite: Interpreter? = null
 
     //케이던스 모델 관련
-    private val modelName = "model_0528_5s.tflite"      //모델 파일명
-    private val windowSizeMillis = 5000L                // 예측에 사용할 윈도우 크기: 4초
+    private val modelName = "model_0604_4s_4.tflite"      //모델 파일명
+    private val windowSizeMillis = 4000L                // 예측에 사용할 윈도우 크기: 4초
     private val slideIntervalMillis = 1000L
     private val sensorBuffer = mutableListOf<Triple<Long, SensorType, FloatArray>>()
     private val kalmanFilters = mutableMapOf<String, KalmanFilter1D>() // 칼만 필터 저장용
@@ -102,6 +103,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var latestPredictedCadence: Int = 0
 
     private val predictionHistory = mutableListOf<Int>()       // 최근 예측값 리스트
+    private val finalPredictionHistory = mutableListOf<Int>() //  최종 걸음 예측값 리스트
     private val smoothingWindowSize = 5                        // 무빙 평균 윈도우 크기
     private val outlierThreshold = 50                          // 튀는 값 판단 기준
 
@@ -204,12 +206,22 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         endButton.setOnClickListener {
             stopTimer()
             webView.evaluateJavascript("window.setMovementState(false);", null)
+
+            // finalPredictionHistory와 averageBPM의 차이 평균 계산
+            val averageBPM = bpmList.average().toInt()
+            val averageDifference = if (finalPredictionHistory.isNotEmpty()) {
+                finalPredictionHistory.map { kotlin.math.abs(it - averageBPM) }.average()
+            } else {
+                0.0  // finalPredictionHistory가 비어있으면 0 리턴
+            }
+
             val intent = Intent(this, ResultActivity::class.java)
             intent.putParcelableArrayListExtra("songs", playedTracks)
-            intent.putExtra("time",elapsedSeconds)
-            intent.putExtra("calorie",calorie)
-            intent.putExtra("distance",distance)
+            intent.putExtra("time", elapsedSeconds)
+            intent.putExtra("calorie", calorie)
+            intent.putExtra("distance", distance)
             intent.putExtra("averageBPM", bpmList.average().toInt())
+            Log.d("Checking_averageDifference", "averageDifference: $averageDifference")
             startActivity(intent)
         }
 
@@ -247,7 +259,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         breathingFeedbackTTS = FeedbackTTS(this) {
             Log.d("MainActivity/TTS", "TTS 초기화 완료")
         }
-
 
         // 걸음 감지 센서
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -647,6 +658,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             val currentTime = System.currentTimeMillis()
             val windowStart = currentTime - windowSizeMillis
 
+
             // 최근 4초간의 센서 데이터 필터링
             val recentData = sensorBuffer.filter { it.first in windowStart..currentTime }
             sensorBuffer.removeAll { it.first < windowStart }
@@ -687,6 +699,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     }
 
                     val average = predictionHistory.average().toInt()
+                    // finalPrediction
                     val finalPrediction = if (predictionHistory.size >= 2) {
                         val prev = predictionHistory[predictionHistory.size - 2]
                         if (kotlin.math.abs(rawPrediction - prev) > outlierThreshold) {
@@ -700,16 +713,24 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     }
 
                     runOnUiThread {
+                        // 케이던스 예측값 띄워주는 부분
                         cadenceTextView.text = "$finalPrediction"
+                        Log.d("Cadence-Prediction", "finalPrediction: $finalPrediction")
+
+                        /** 케이던스 정확도를 계산하기 위해
+                        cadenceRunnable이 실행될 때마다 배열에 최종 예측값 저장
+                         **/
+                        finalPredictionHistory.add(finalPrediction)
+                        Log.d("Checking cadence history", "History: $finalPredictionHistory")
                     }
                 }
 
             }
-
             cadenceHandler.postDelayed(this, slideIntervalMillis)
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onResume() {
         super.onResume()
         accelerometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }
