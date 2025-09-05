@@ -7,7 +7,7 @@ object ApiConfig {
     private const val PREF_NAME = "api_config"
     private const val KEY_BASE_URL = "base_url"
 
-    // 기본 URL (ngrok 재시작 시 여기서 변경)
+    // TODO: ngrok/서버 주소로 교체
     private const val DEFAULT_BASE_URL = "https://86ac10fffdb1.ngrok-free.app"
 
     private var baseUrl: String? = null

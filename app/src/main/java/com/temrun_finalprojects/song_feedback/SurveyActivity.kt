@@ -64,7 +64,7 @@ class SurveyActivity : AppCompatActivity() {
     // 환경
     private var userId: String? = null
     // TODO: 서버 재기동 시 교체
-//    private val BASE_URL = "https://4a0bc02d836c.ngrok-free.app"
+//    private val BASE_URL = "https://339cdd456ce9.ngrok-free.app"
     private fun getFeedbackUrl() = ApiConfig.getFeedbackUrl()
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -12,14 +12,15 @@ import com.temrun_finalprojects.util.Constants.BASE_URL
 import okhttp3.*
 import java.io.IOException
 
-class MyPageFragment : Fragment(R.layout.fragment_my_page) {
+class MyPageFragment : Fragment(R.layout.fragment_account) {
 
     private val client by lazy { OkHttpClient() }
     // TODO: 서버 재기동 시 교체
-    // private val BASE_URL ="https://d07802f0f999.ngrok-free.app"
+    // private val BASE_URL ="https://339cdd456ce9.ngrok-free.app"
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
 
         view.findViewById<Button>(R.id.btnDeleteAccount)?.setOnClickListener {
             showDeleteConfirm()

@@ -54,7 +54,7 @@ class RunningResultBottomSheet : BottomSheetDialogFragment() {
     private val api: LocalApi by lazy {
         Retrofit.Builder()
             // 교체
-//            .baseUrl("https://d07802f0f999.ngrok-free.app")
+//            .baseUrl("https://339cdd456ce9.ngrok-free.app")
             .baseUrl(ApiConfig.getBaseUrl())
             .addConverterFactory(GsonConverterFactory.create())
             .build()

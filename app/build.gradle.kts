@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId = "com.temrun_finalprojects"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
