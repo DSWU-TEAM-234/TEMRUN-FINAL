@@ -62,7 +62,7 @@ class ResultActivity : AppCompatActivity() {
     // OkHttp
     private val client: OkHttpClient = OkHttpClient()
     private val mediaJson = "application/json; charset=utf-8".toMediaType()
-//    private val BASE_URL = "https://4382a6a5c3d2.ngrok-free.app"
+//  private val BASE_URL = "https://4382a6a5c3d2.ngrok-free.app"
 
     private fun getFeedbackUrl() = ApiConfig.getFeedbackUrl()
 

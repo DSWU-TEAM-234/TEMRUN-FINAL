@@ -1,6 +1,7 @@
 package com.temrun_finalprojects.network
 
 import com.google.gson.GsonBuilder
+import com.temrun_finalprojects.config.ApiConfig
 import com.temrun_finalprojects.util.Constants
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -32,7 +33,7 @@ object RetrofitClient {
 
     val api: ApiService by lazy {
         Retrofit.Builder()
-            .baseUrl(Constants.BASE_URL)
+            .baseUrl(ApiConfig.getBaseUrl())
             .addConverterFactory(GsonConverterFactory.create(gson))
             .client(client)
             .build()

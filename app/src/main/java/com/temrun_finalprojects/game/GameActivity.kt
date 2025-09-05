@@ -84,6 +84,14 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var scoreText : TextView
 
 
+    private lateinit var judgementBadge: ImageView
+    private var badgeAnimator: AnimatorSet? = null
+    private val badgeHandler = Handler(Looper.getMainLooper())
+    private var badgeHideRunnable: Runnable? = null
+
+
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,14 +108,16 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
         //선택화면에서 준 케이던스를 저장
 //        val cadence = intent.getIntExtra("cadence", -1)  // -1은 기본값 (예외 대비)
         //내려오는 바 생성
-        startSpawningBars(bpm = 130)
-        //startToneMetronome(150)
+        startSpawningBars(bpm = 140.toLong())
+        startToneMetronome(140.toLong())
 
         val guitarView = findViewById<ImageView>(R.id.instrument1)
         val drumView = findViewById<ImageView>(R.id.instrument2)
         val pianoView = findViewById<ImageView>(R.id.instrument3)
 
         instruments = arrayOf(guitarView,drumView,pianoView)
+
+        judgementBadge = findViewById(R.id.judgementBadge)
 
 
 //        val plusButton = findViewById<Button>(R.id.plusButton)
@@ -295,14 +305,14 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
 
                 val (targetBar, targetIdx) = if (diff1 <= diff2) Pair(firstBar, 0) else Pair(secondBar, 1)
 
-                val threshold = 100
+                val threshold = 80
 
-                if(kotlin.math.abs(targetBar.y - judgementLine.y) > 400)
+                if(kotlin.math.abs(targetBar.y - judgementLine.y) > 300)
                     return
                 if (kotlin.math.abs(targetBar.y - judgementLine.y) < threshold ) {
                     vibrateStrong()
                     Perfect()
-                    showJudgementText("PERFECT!!")
+                    showJudgeBadge("PERFECT")
                     showHitEffect(targetBar.y)
                     scoreText.text= "$score"
 
@@ -311,13 +321,12 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
                     findViewById<FrameLayout>(R.id.rhythmBarContainer).removeView(targetBar)
                     activeBars.removeAt(targetIdx)
                 }
-                else if(kotlin.math.abs(targetBar.y - judgementLine.y) < 200 ){
+                else if(kotlin.math.abs(targetBar.y - judgementLine.y) < 180 ){
                     vibrateWeak()
                     Good()
-                    showJudgementText("Good!")
+                    showJudgeBadge("GOOD")
                     showHitEffect(targetBar.y)
                     scoreText.text= "$score"
-
 
 
                     // 판정된 바만 제거
@@ -327,7 +336,7 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
                 else {
                     // ❌ 판정 실패
                     Miss()
-                    showJudgementText("MISS..")
+                    showJudgeBadge("MISS")
                     scoreText.text= "$score"
                 }
             }
@@ -374,16 +383,69 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
 
 
 
-    private fun showJudgementText(text: String) {
-        val judgementTextView = findViewById<TextView>(R.id.judgementText)
-        judgementTextView.text = text
-        judgementTextView.visibility = View.VISIBLE
+    private fun showJudgeBadge(type: String) = runOnUiThread {
+        val resId = when (type) {
+            "PERFECT" -> R.drawable.perfect
+            "GOOD"    -> R.drawable.good
+            "MISS"    -> R.drawable.miss
+            else      -> return@runOnUiThread
+        }
 
-        // 일정 시간 후 자동으로 사라지게
-        Handler(Looper.getMainLooper()).postDelayed({
-            judgementTextView.visibility = View.GONE
-        }, 1000) // 800ms 후 사라짐
+        // 진행 중 작업 정리
+        badgeHideRunnable?.let { badgeHandler.removeCallbacks(it) }
+        badgeHideRunnable = null
+        badgeAnimator?.cancel()
+
+        // 이미 보이는 중이면 '초단기 아웃' 후 교체
+        if (judgementBadge.visibility == View.VISIBLE && judgementBadge.alpha > 0.05f) {
+            ObjectAnimator.ofFloat(judgementBadge, View.ALPHA, judgementBadge.alpha, 0f).apply {
+                duration = 70 // 빠르게 끄기 (50~120ms 조정)
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        swapInNewBadge(resId)
+                    }
+                })
+                start()
+            }
+            return@runOnUiThread
+        }
+
+        // 안 보이는 상태면 바로 교체 후 인
+        swapInNewBadge(resId)
     }
+
+    private fun swapInNewBadge(resId: Int) {
+        judgementBadge.setImageResource(resId)
+        judgementBadge.alpha = 0f
+        judgementBadge.scaleX = 0.9f
+        judgementBadge.scaleY = 0.9f
+        judgementBadge.visibility = View.VISIBLE
+        judgementBadge.bringToFront()
+        judgementBadge.translationZ = 100f
+
+        val fadeIn = ObjectAnimator.ofFloat(judgementBadge, View.ALPHA, 0f, 1f).setDuration(90)
+        val sx = ObjectAnimator.ofFloat(judgementBadge, View.SCALE_X, 0.9f, 1f).setDuration(120)
+        val sy = ObjectAnimator.ofFloat(judgementBadge, View.SCALE_Y, 0.9f, 1f).setDuration(120)
+
+        badgeAnimator = AnimatorSet().apply { playTogether(fadeIn, sx, sy) }
+        badgeAnimator?.start()
+
+        // 홀드 후 자동 페이드아웃 (원하면 시간 조정)
+        badgeHideRunnable = Runnable {
+            val out = ObjectAnimator.ofFloat(judgementBadge, View.ALPHA, 1f, 0f).apply { duration = 140 }
+            out.addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    judgementBadge.visibility = View.GONE
+                    judgementBadge.alpha = 1f
+                }
+            })
+            out.start()
+        }
+        // 보여주는 총 시간(인 끝난 뒤 ~ 아웃 시작)
+        badgeHandler.postDelayed(badgeHideRunnable!!, /*hold*/ 520L)
+    }
+
+
 
 
     fun Miss(){
@@ -563,8 +625,8 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
     //________________________________________
 
 
-    fun startToneMetronome(bpm: Int) {
-        val interval = (60000 / bpm).toLong()
+    fun startToneMetronome(bpm: Long) {
+        val interval = (60000 / bpm)
         toneGenerator = ToneGenerator(AudioManager.STREAM_MUSIC, 100)
 
         isToneRunning = true
@@ -592,6 +654,7 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
     override fun onPause() {
         super.onPause()
         resetAll()
+        stopToneMetronome()
     }
 
     private fun resetAll() {
@@ -627,7 +690,7 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
 
 
 
-    fun spawnRhythmBar(bpm: Int) {
+    fun spawnRhythmBar(bpm: Long) {
         val rhythmZone = findViewById<FrameLayout>(R.id.rhythmBarContainer)
         val barHeight = 24.dpToPx()
         val bar = View(this).apply {
@@ -664,7 +727,7 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
                 bottomZone.getLocationOnScreen(bottomPos)
                 val bottomY = bottomPos[1]
 
-                if (barY > bottomY + bottomZone.height) {
+                if (barY > bottomY + bottomZone.height - 50 ) {
                     // 완전히 아래로 사라진 바: 그냥 제거
                     Log.d("리듬바", "아래로 내려간 바 제거됨")
                     Miss()
@@ -685,8 +748,8 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
     }
 
 
-    fun startSpawningBars(bpm: Int) {
-        val interval = (60000 / bpm).toLong()  // ms
+    fun startSpawningBars(bpm: Long) {
+        val interval = (60000 / bpm) // ms
         val handler = Handler(Looper.getMainLooper())
 
         val runnable = object : Runnable {
@@ -746,6 +809,7 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
     fun getComboMultiplier(combo: Int): Float {
         return 1.0f + (combo / 100f)  // 예: 콤보 10이면 1.1배
     }
+
 
 
 }

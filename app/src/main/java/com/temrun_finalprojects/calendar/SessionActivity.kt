@@ -96,7 +96,7 @@ class SessionActivity : AppCompatActivity(), SessionAdapter.OnSessionClickListen
             .build()
 
         val retrofit = Retrofit.Builder()
-//            .baseUrl(BASE_URL)
+//          .baseUrl(BASE_URL)
             .baseUrl(ApiConfig.getBaseUrl())
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
