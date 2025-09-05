@@ -663,6 +663,7 @@ private fun spawnOneShotRipple() {
 }
 
 // 케이던스 예측 루프 -----------------------------------------
+private var lastVibrationTime = 0L
 private val cadenceRunnable = object : Runnable {
     override fun run() {
         val currentTime = System.currentTimeMillis()
@@ -731,6 +732,15 @@ private val cadenceRunnable = object : Runnable {
                     val cadenceFrame = findViewById<FrameLayout>(R.id.cadenceFrame)
                     if (bpmDiff >= 5) {
                         cadenceFrame.setBackgroundResource(R.drawable.ic_cadence_red)
+
+                        val now = System.currentTimeMillis()
+                        // 4초(4000ms) 쿨다운 체크
+                        if (now - lastVibrationTime >= 10000) {
+                            requestVibrationFeedback(8000)
+                            lastVibrationTime = now
+                        }
+
+
                     } else {
                         cadenceFrame.setBackgroundResource(R.drawable.ic_cadence_green)
                     }

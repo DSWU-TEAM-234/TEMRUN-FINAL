@@ -304,7 +304,7 @@ class ResultActivity : AppCompatActivity() {
             }
 
             if (items.isNotEmpty()) {
-                val url = "$BASE_URL/api/runs/feedback"
+                val url = ApiConfig.getFeedbackUrl()
                 lifecycleScope.launch(Dispatchers.IO) {
                     var failed = false
                     items.forEach { obj ->
