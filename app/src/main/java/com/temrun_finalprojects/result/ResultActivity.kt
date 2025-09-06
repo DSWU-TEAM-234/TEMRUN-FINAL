@@ -124,6 +124,10 @@ class ResultActivity : AppCompatActivity() {
         val targetCadence = intent.getIntExtra("targetCadence", 160)
         val accuracyDouble = intent.getDoubleExtra("cadenceAccuracy", 0.0)
 
+//        showReceivedExtrasDialog(
+//            elapsedSeconds, avgBPM, distance, calorie, cadenceList, targetCadence, accuracyDouble
+//        )
+
         val counts = BreathFeedbackCounts(
             normal = intent.getIntExtra("breath_normal", 0),
             patternOnly = intent.getIntExtra("breath_patternOnly", 0),
@@ -252,7 +256,8 @@ class ResultActivity : AppCompatActivity() {
             val minCadence = cadenceList.minOrNull() ?: 0
 
             // 음악 BPM 리스트 (없으면 빈 리스트)
-            val musicBpmList: List<Int> = emptyList()
+            val musicBpmList: List<Int> =
+                if (avgBPM > 0) listOf(avgBPM) else emptyList()
 
             // 요청 바디 구성 (network 패키지 DTO 사용)
             val req = RunResultRequest(
@@ -432,4 +437,46 @@ class ResultActivity : AppCompatActivity() {
         val aReduced = 10 - nReduced
         ratioView.text = "정상 : 비정상\n  $nReduced : $aReduced"
     }
+
+    //로그찍는함수
+    private fun showReceivedExtrasDialog(
+        elapsedSeconds: Int,
+        avgBPM: Int,
+        distance: Double,
+        calorie: Double,
+        cadenceList: ArrayList<Int>,
+        targetCadence: Int,
+        accuracyDouble: Double
+    ) {
+        val head = cadenceList.take(10)
+        val tail = cadenceList.takeLast(10)
+
+        val msg = buildString {
+            appendLine("• time: ${elapsedSeconds}s")
+            appendLine("• averageBPM: $avgBPM")
+            appendLine("• distance: ${"%.3f".format(distance)} km")
+            appendLine("• calorie: ${"%.1f".format(calorie)} kcal")
+            appendLine("• targetCadence: $targetCadence")
+            appendLine("• cadenceAccuracy: ±${"%.1f".format(accuracyDouble)}")
+            appendLine("• cadenceList: size=${cadenceList.size}")
+            if (cadenceList.isNotEmpty()) {
+                appendLine("  head=${head}")
+                if (cadenceList.size > 10) appendLine("  tail=${tail}")
+            }
+        }
+
+        val tv = TextView(this).apply {
+            setPadding(48, 32, 48, 32)
+            typeface = android.graphics.Typeface.MONOSPACE
+            text = msg
+            setTextIsSelectable(true) // 복사 가능
+        }
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("ResultActivity 받은 값")
+            .setView(tv)
+            .setPositiveButton("확인", null)
+            .show()
+    }
+
 }

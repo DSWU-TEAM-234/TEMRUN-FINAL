@@ -285,27 +285,47 @@ override fun onCreate(savedInstanceState: Bundle?) {
             0.0  // finalPredictionHistory가 비어있으면 0 리턴
         }
 
+
         // 3) 결과 화면으로 이동
         val intent = Intent(this, ResultActivity::class.java).apply {
             putParcelableArrayListExtra("songs", songsToSend)
+            Log.d("ResultIntent", "songs: $songsToSend")
+
             putExtra("time", timeToSend)
+            Log.d("ResultIntent", "time: $timeToSend")
+
             putExtra("calorie", calorieToSend)
+            Log.d("ResultIntent", "calorie: $calorieToSend")
+
             putExtra("distance", distanceToSend)
+            Log.d("ResultIntent", "distance: $distanceToSend")
+
             putExtra("averageBPM", avgBpmToSend)
+            Log.d("ResultIntent", "averageBPM: $avgBpmToSend")
+
             putExtra("targetCadence", targetCadence)
+            Log.d("ResultIntent", "targetCadence: $targetCadence")
+
             putExtra("cadenceAccuracy", averageDifference)
+            Log.d("ResultIntent", "cadenceAccuracy: $averageDifference")
+
             putExtra("breath_normal", breathResultCount.normal)
             putExtra("breath_patternOnly", breathResultCount.patternOnly)
             putExtra("breath_organOnly", breathResultCount.organOnly)
             putExtra("breath_bothMismatch", breathResultCount.bothMismatch)
+            Log.d(
+                "ResultIntent",
+                "breath -> normal=${breathResultCount.normal}, " +
+                        "patternOnly=${breathResultCount.patternOnly}, " +
+                        "organOnly=${breathResultCount.organOnly}, " +
+                        "bothMismatch=${breathResultCount.bothMismatch}"
+            )
 
-            Log.d("Checking_averageDifference", "averageDifference: $averageDifference")
             putIntegerArrayListExtra("cadenceDataList", ArrayList(cadenceDataList))
-
-
-
+            Log.d("ResultIntent", "cadenceDataList: $cadenceDataList")
         }
         startActivity(intent)
+
     }
 
 

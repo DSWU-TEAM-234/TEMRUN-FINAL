@@ -154,7 +154,9 @@ class CalendarFragment : Fragment() {
                         val minutes = (totalSec % 3600) / 60
                         val durationStr = String.format("%d:%02d", hours, minutes)
 
+
                         requireActivity().runOnUiThread {
+
                             updateMonthSummary(durationStr, avgBpm, totalCal)
                             // 캘린더 뷰 새로고침
                             binding.calendarView.invalidateDecorators()
