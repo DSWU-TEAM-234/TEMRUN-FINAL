@@ -24,6 +24,7 @@ import java.io.IOException
 import java.time.LocalDate
 import com.temrun_finalprojects.config.ApiConfig
 import com.temrun_finalprojects.util.Constants.BASE_URL
+import android.util.Log
 
 class CalendarFragment : Fragment() {
 
@@ -110,50 +111,59 @@ class CalendarFragment : Fragment() {
         binding.textViewMonth.text = date.monthValue.toString().padStart(2, '0')
     }
 
+    // 수정된 fetchCalendarData 함수
     private fun fetchCalendarData(year: Int, month: Int) {
-        //Fragment에서는 Context를 통해 접근
+        // Fragment에서는 Context를 통해 접근
         val prefs = requireContext().getSharedPreferences("AppUser", MODE_PRIVATE)
         val userId = prefs.getString("user_id", null) ?: "u12345"
 
         val monthParam = String.format("%04d-%02d", year, month)
-//      val url = "$BASE_URL/api/users/$userId/calendar?month=$monthParam"
         val url = ApiConfig.getCalendarUrl(userId, monthParam)
-        val request = Request.Builder().url(url).get().build()
 
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                requireActivity().runOnUiThread {
-                    Toast.makeText(requireContext(), "캘린더 데이터를 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
-                }
-            }
+        // 약간의 지연 추가 (서버 저장 완료 대기)
+        binding.root.postDelayed({
+            val request = Request.Builder()
+                .url(url)
+                .addHeader("Cache-Control", "no-cache") // 캐시 무효화
+                .get()
+                .build()
 
-            override fun onResponse(call: Call, response: Response) {
-                response.body?.string()?.let { body ->
-                    val json = JSONObject(body)
-                    val dates = json.optJSONArray("runningDates") ?: return@let
-                    runningDays.clear()
-                    for (i in 0 until dates.length()) {
-                        val dayInt = dates.getString(i).toInt()
-                        runningDays.add(CalendarDay.from(year, month, dayInt))
-                    }
-
-                    val totalSec = json.optLong("totalDuration", 0L)
-                    val avgBpm = json.optInt("averageBpm", 0)
-                    val totalCal = json.optInt("totalCalories", 0)
-
-                    val hours = totalSec / 3600
-                    val minutes = (totalSec % 3600) / 60
-                    val durationStr = String.format("%d:%02d", hours, minutes)
-
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
                     requireActivity().runOnUiThread {
-                        updateMonthSummary(durationStr, avgBpm, totalCal)
+                        Toast.makeText(requireContext(), "캘린더 데이터를 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
                     }
                 }
-            }
-        })
+
+                override fun onResponse(call: Call, response: Response) {
+                    response.body?.string()?.let { body ->
+                        val json = JSONObject(body)
+                        val dates = json.optJSONArray("runningDates") ?: return@let
+                        runningDays.clear()
+                        for (i in 0 until dates.length()) {
+                            val dayInt = dates.getString(i).toInt()
+                            runningDays.add(CalendarDay.from(year, month, dayInt))
+                        }
+                        Log.d("CalendarFragment", "JSON 전체: $body")
+                        val totalSec = json.optLong("totalDuration", 0L)
+                        val avgBpm   = json.optInt("averageBpm", 0)
+                        val totalCal = json.optInt("totalCalories", 0)
+                        Log.d("CalendarFragment", "parsed totalSec=$totalSec, avgBpm=$avgBpm, totalCal=$totalCal")
+
+                        val hours = totalSec / 3600
+                        val minutes = (totalSec % 3600) / 60
+                        val durationStr = String.format("%d:%02d", hours, minutes)
+
+                        requireActivity().runOnUiThread {
+                            updateMonthSummary(durationStr, avgBpm, totalCal)
+                            // 캘린더 뷰 새로고침
+                            binding.calendarView.invalidateDecorators()
+                        }
+                    }
+                }
+            })
+        }, 500) // 500ms 지연
     }
-
-
 
     private fun updateMonthSummary(
         totalDuration: String,
@@ -162,6 +172,16 @@ class CalendarFragment : Fragment() {
     ) {
         binding.textViewSummary.text =
             "$totalDuration / ${averageBpm}BPM / ${totalCalories}kcal"
+    }
+
+    // 새로 추가: onResume() 함수
+    override fun onResume() {
+        super.onResume()
+        // 프래그먼트가 다시 보여질 때마다 현재 월 데이터 새로고침
+        val current = binding.calendarView.currentDate
+        val currentYear = current.year
+        val currentMonth = normalizeMonth(current.month)
+        fetchCalendarData(currentYear, currentMonth)
     }
 
     override fun onDestroyView() {

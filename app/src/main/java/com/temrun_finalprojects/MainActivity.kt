@@ -273,7 +273,7 @@ override fun onCreate(savedInstanceState: Bundle?) {
         val songsToSend = ArrayList(playedTracks)
         val timeToSend = elapsedSeconds
         val calorieToSend = calorie
-        val distanceToSend = distance.toFloat()
+        val distanceToSend = distance
         val avgBpmToSend = if (bpmList.isNotEmpty()) bpmList.average().toInt() else 0
         val targetCadence = cadence.toInt()
 
@@ -381,7 +381,7 @@ override fun onSensorChanged(event: SensorEvent?) {
                 spawnOneShotRipple()
                 calorie += 0.03
                 calorieTextView.text = String.format("%.01f", calorie)
-                distance += 0.001
+                distance += 0.01
                 distanceTextView.text = String.format("%.01f", distance)
             }
         }

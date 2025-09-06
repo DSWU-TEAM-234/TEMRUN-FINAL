@@ -48,6 +48,9 @@ import org.json.JSONObject
 import com.google.gson.GsonBuilder
 import com.temrun_finalprojects.config.ApiConfig
 import com.temrun_finalprojects.util.Constants.BASE_URL
+import kotlin.collections.forEachIndexed
+import kotlin.collections.mapIndexedNotNull
+import kotlin.jvm.java
 
 // 호흡 피드백 데이터
 data class BreathFeedbackCounts(
@@ -132,7 +135,7 @@ class ResultActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.ResultTimeText).text =
             String.format("%02d:%02d", elapsedSeconds / 60, elapsedSeconds % 60)
         findViewById<TextView>(R.id.ResultBPMText).text = avgBPM.toString()
-        findViewById<TextView>(R.id.ResultCalorieText).text = calorie.toString()
+        findViewById<TextView>(R.id.ResultCalorieText).text = String.format("%.1f", calorie)
 
         val songContainer = findViewById<LinearLayout>(R.id.songLinearLayout)
 
@@ -146,8 +149,8 @@ class ResultActivity : AppCompatActivity() {
         cadenceChart.setNoDataText("케이던스 데이터가 없어요")
         tvAccuracy = findViewById(R.id.textCadenceAccuracy)
         tvAvgCadence = findViewById(R.id.textCadenceValue)
-        tvDistance = findViewById(R.id.textCadencePrecision)
-        tvDistance.text = String.format("%.2f km", distance)
+        tvDistance = findViewById(R.id.textDistance)
+        tvDistance.text = String.format("%.01f km", distance)
 
         if (cadenceList.isNotEmpty()) {
             val entries = cadenceList.mapIndexed { idx, value ->
@@ -175,15 +178,15 @@ class ResultActivity : AppCompatActivity() {
                 }
                 addLimitLine(limitLine)
             }
-
+            cadenceChart.axisRight.isEnabled = false //
             cadenceChart.data?.notifyDataChanged()
             cadenceChart.notifyDataSetChanged()
             cadenceChart.invalidate()
 
             tvAvgCadence.text = cadenceList.average().toInt().toString()
-            tvAccuracy.text = String.format("±%.0f%%", accuracyDouble)
+            tvAccuracy.text = String.format("±%.0f", accuracyDouble)
         } else {
-            tvAccuracy.text = "±0%"
+            tvAccuracy.text = "±0"
             tvAvgCadence.text = "0"
         }
 
