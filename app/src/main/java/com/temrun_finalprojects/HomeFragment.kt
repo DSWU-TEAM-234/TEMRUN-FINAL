@@ -21,7 +21,7 @@ class HomeFragment : Fragment() {
 
     private lateinit var btns_breath: List<Button>
     private lateinit var btns_mode: List<Button>
-    private var cadenceValue = 180
+    private var cadenceValue = 150
     private var total = 0
 
     private var recorder: AudioRecorder? = null

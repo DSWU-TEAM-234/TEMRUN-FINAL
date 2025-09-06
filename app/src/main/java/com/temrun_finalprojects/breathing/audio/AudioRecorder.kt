@@ -144,7 +144,7 @@ class AudioRecorder(private val context: Context) {
 
             // 기존 브로드캐스트 로직...
             val intent = Intent("PREDICTION_UPDATE")
-            intent.putExtra("result", result)
+            intent.putExtra("resultToTts", result)
             context.sendBroadcast(intent)
 
             Log.d("AudioRecorder", "모델2 결과: $result")

@@ -12,7 +12,7 @@ import kotlin.math.sin
 object ModelInterpreter {
     private const val TAG = "ModelInterpreter"
     private var abnormalCount = 0 // 비정상 감지 횟수
-    private const val ABNORMAL_THRESHOLD = 5 // 비정상 임계값
+    private const val ABNORMAL_THRESHOLD = 1 // 비정상 임계값
 
     // -----------------------------
     // ✅ 개선된 모델1 정규화 기준 (3초 세그먼트 기준 학습 값)

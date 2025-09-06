@@ -151,6 +151,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     enum class SensorType { ACCELEROMETER, GYROSCOPE }
 
+    private val breathResultCount = BreathResultCount()
+
 /*
 // TODO: 서버 재기동 시 교체
 private val BASE_URL ="https://4382a6a5c3d2.ngrok-free.app"
@@ -194,8 +196,9 @@ private var refreshToken: String? = null
 
 private val predictionReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        val result = intent?.getStringExtra("result") ?: return
+        val result = intent?.getStringExtra("resultToTts") ?: return
         Log.d("MainActivity/TTS", "받은 예측 결과: $result")
+        breathResultCount.add(result)
 
         breathingFeedbackTTS?.speak(result)
 
@@ -291,14 +294,16 @@ override fun onCreate(savedInstanceState: Bundle?) {
             putExtra("averageBPM", avgBpmToSend)
             putExtra("targetCadence", targetCadence)
             putExtra("cadenceAccuracy", averageDifference)
+            putExtra("breath_normal", breathResultCount.normal)
+            putExtra("breath_patternOnly", breathResultCount.patternOnly)
+            putExtra("breath_organOnly", breathResultCount.organOnly)
+            putExtra("breath_bothMismatch", breathResultCount.bothMismatch)
+
             Log.d("Checking_averageDifference", "averageDifference: $averageDifference")
             putIntegerArrayListExtra("cadenceDataList", ArrayList(cadenceDataList))
 
 
-//                intent.putExtra("breath_normal", breathResultCount.normal)
-//                intent.putExtra("breath_patternOnly", breathResultCount.patternOnly)
-//                intent.putExtra("breath_organOnly", breathResultCount.organOnly)
-//                intent.putExtra("breath_bothMismatch", breathResultCount.bothMismatch)
+
         }
         startActivity(intent)
     }
