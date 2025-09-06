@@ -7,18 +7,21 @@
     android:background="@android:color/white"
     android:padding="24dp">
 
-    <!-- 중앙 로고 -->
-<!--    <ImageView-->
-<!--        android:id="@+id/imageLogo"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:src="@drawable/logo_temrun"-->
-<!--        android:layout_marginBottom="0dp" />-->
+
+
 
     <Space
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
+
+    <ImageView
+        android:id="@+id/imageLogo"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="230dp"
+        android:src="@drawable/logo_temrun" />
 
     <!-- Spotify로 시작하기 버튼 -->
     <Button
