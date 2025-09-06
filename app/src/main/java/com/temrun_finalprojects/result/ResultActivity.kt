@@ -184,7 +184,7 @@ class ResultActivity : AppCompatActivity() {
             cadenceChart.invalidate()
 
             tvAvgCadence.text = cadenceList.average().toInt().toString()
-            tvAccuracy.text = String.format("±%.0f", accuracyDouble)
+            tvAccuracy.text = String.format("±%.0f ", accuracyDouble)
         } else {
             tvAccuracy.text = "±0"
             tvAvgCadence.text = "0"
