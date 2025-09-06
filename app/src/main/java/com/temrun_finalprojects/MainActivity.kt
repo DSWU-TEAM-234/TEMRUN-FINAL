@@ -62,6 +62,7 @@ import kotlin.math.sqrt
 import com.temrun_finalprojects.data.BreathResultCount
 import com.temrun_finalprojects.config.ApiConfig
 
+
 // 칼만 필터 클래스 정의
 class KalmanFilter1D(
     private val processNoise: Float = 0.008f,
@@ -152,6 +153,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     enum class SensorType { ACCELEROMETER, GYROSCOPE }
 
     private val breathResultCount = BreathResultCount()
+
+    // *** 추가: TFLite 접근 보호용 락 & 상태 플래그
+    private val tfliteLock = Any() // ***
+    @Volatile private var isInterpreterClosed = false // ***
 
 /*
 // TODO: 서버 재기동 시 교체
@@ -268,6 +273,9 @@ override fun onCreate(savedInstanceState: Bundle?) {
         stopTimer()
         stopMetronome()
         isPaused = true
+
+        // *** 추가: 케이던스 루프 즉시 중지
+        cadenceHandler.removeCallbacks(cadenceRunnable) // ***
 
         // 2) 전달할 값 스냅샷
         val songsToSend = ArrayList(playedTracks)
@@ -718,7 +726,19 @@ private val cadenceRunnable = object : Runnable {
 
                 val inferenceStart = System.currentTimeMillis()
                 val output = Array(1) { FloatArray(1) }
-                tflite?.run(inputBuffer, output)
+//                tflite?.run(inputBuffer, output)
+
+                // *** 추가: 닫힘/널 방어 + 동기화 + 예외 처리
+                try { // ***
+                    synchronized(tfliteLock) { // ***
+                        if (isInterpreterClosed || tflite == null) return@execute // ***
+                        tflite!!.run(inputBuffer, output) // ***
+                    } // ***
+                } catch (e: IllegalStateException) { // ***
+                    Log.w("TFLite", "Interpreter already closed. skip inference.", e) // ***
+                    return@execute // ***
+                } // ***
+
                 val inferenceEnd = System.currentTimeMillis()
                 Log.d("TIME", "모델 추론 시간: ${inferenceEnd - inferenceStart}ms")
 
@@ -773,6 +793,8 @@ private val cadenceRunnable = object : Runnable {
             }
         }
 
+        if (isFinishing || isInterpreterClosed) return // ***
+
         cadenceHandler.postDelayed(this, slideIntervalMillis)
     }
 }
@@ -790,6 +812,9 @@ override fun onPause() {
     super.onPause()
     sensorManager.unregisterListener(this)
 
+    // *** 추가: 핸들러 루프 중지
+    cadenceHandler.removeCallbacks(cadenceRunnable) // ***
+
     for (i in rippleHost.childCount - 1 downTo 0) {
         val v = rippleHost.getChildAt(i)
         if (v is RippleBackground) v.stopRippleAnimation()
@@ -803,6 +828,18 @@ override fun onDestroy() {
     tflite?.close()
     super.onDestroy()
     breathingFeedbackTTS?.destroy()
+
+    // *** 추가: 실행기 중지 (대기 작업 즉시 취소)
+    executor.shutdownNow() // ***
+
+    // *** 추가: 닫힘 플래그 먼저 세팅
+    isInterpreterClosed = true // ***
+
+    // *** 수정: 닫을 때 동기화 & 널 처리
+    synchronized(tfliteLock) { // ***
+        tflite?.close()
+        tflite = null
+    } // ***
 }
 
 override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
