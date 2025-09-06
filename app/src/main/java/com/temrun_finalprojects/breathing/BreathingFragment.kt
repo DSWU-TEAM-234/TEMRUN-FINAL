@@ -1,5 +1,6 @@
 package com.temrun_finalprojects.breathing
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
@@ -29,16 +30,21 @@ class BreathingFragment : Fragment(R.layout.fragment_breathing) {
 
         runDetail?.let { d ->
             // 1) 비정상 타입 별 비율 원그래프
-            val entries = listOf(
-                PieEntry(d.breathAbnormalType1.toFloat(), "타입1"),
-                PieEntry(d.breathAbnormalType2.toFloat(), "타입2"),
-                PieEntry(d.breathAbnormalType3.toFloat(), "타입3")
-            )
+            val entries = mutableListOf<PieEntry>()
+            if (d.breathAbnormalType1 > 0) entries.add(PieEntry(d.breathAbnormalType1.toFloat(), "호흡 패턴만 불일치"))
+            if (d.breathAbnormalType2 > 0) entries.add(PieEntry(d.breathAbnormalType2.toFloat(), "호흡 기관만 불일치"))
+            if (d.breathAbnormalType3 > 0) entries.add(PieEntry(d.breathAbnormalType3.toFloat(), "둘 다 불일치"))
+            if (entries.isEmpty()) {entries.add(PieEntry(1f, "정상"))}
+//            val entries = listOf(
+//                PieEntry(d.breathAbnormalType1.toFloat(), "호흡 패턴만 불일치"),
+//                PieEntry(d.breathAbnormalType2.toFloat(), "호흡 기관만 불일치"),
+//                PieEntry(d.breathAbnormalType3.toFloat(), "둘 다 불일치")
+//            )
             val dataSet = PieDataSet(entries, "").apply {
-                setColors(
-                    resources.getColor(R.color.teal_700, null),
-                    resources.getColor(R.color.purple_500, null),
-                    resources.getColor(R.color.orange_500, null)
+                colors = listOf(
+                    Color.parseColor("#4A90E2"),
+                    Color.parseColor("#7ED321"),
+                    Color.parseColor("#FF4D4F")
                 )
                 valueTextSize = 12f
                 valueFormatter = PercentFormatter(pieChartBreathing)
