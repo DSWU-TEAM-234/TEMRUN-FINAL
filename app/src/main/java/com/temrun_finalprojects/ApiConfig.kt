@@ -8,7 +8,7 @@ object ApiConfig {
     private const val KEY_BASE_URL = "base_url"
 
     // 기본 URL (ngrok 재시작 시 여기서 변경)
-    private const val DEFAULT_BASE_URL = "https://409ee347dd65.ngrok-free.app"
+    private const val DEFAULT_BASE_URL = "https://1be39ed9a110.ngrok-free.app"
 
     private var baseUrl: String? = null
 

@@ -201,19 +201,41 @@ private var refreshToken: String? = null
 
 private val predictionReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        val result = intent?.getStringExtra("resultToTts") ?: return
-        Log.d("MainActivity/TTS", "받은 예측 결과: $result")
-        breathResultCount.add(result)
+        val result1 = intent?.getStringExtra("result1")
+        val result2 = intent?.getStringExtra("resultToTts")
 
-        breathingFeedbackTTS?.speak(result)
+        result1?.let { breathResultCount.add(it) }
+        result2?.let { breathResultCount.add(it) }
+
+        if (!result1.isNullOrEmpty()) {
+            Log.d("MainActivity", "받은 예측 결과(모델1): $result1")
+        }
+
+        if (!result2.isNullOrEmpty()) {
+            Log.d("MainActivity", "받은 예측 결과(모델2): $result2")
+            breathingFeedbackTTS?.speak(result2)
+        }
 
         val breathFrame = findViewById<FrameLayout>(R.id.breathFrame)
-        if (result.isNotEmpty()) {
-            breathFrame.setBackgroundResource(R.drawable.ic_breath_red)
-        } else {
-            breathFrame.setBackgroundResource(R.drawable.ic_breath_green)
+        when {
+            // 모델1: 정상일 때
+            result1 == "정상" -> {
+                breathFrame.setBackgroundResource(R.drawable.ic_breath_green)
+            }
+
+            // 모델2: 상세 피드백이 들어왔을 때
+            !result2.isNullOrEmpty() -> {
+                breathFrame.setBackgroundResource(R.drawable.ic_breath_red)
+            }
+
+            // 그 외 (모델1 비정상)
+            else -> {
+                breathFrame.setBackgroundResource(R.drawable.ic_breath_red)
+            }
         }
+
     }
+
 }
 
 override fun onCreate(savedInstanceState: Bundle?) {
@@ -224,6 +246,14 @@ override fun onCreate(savedInstanceState: Bundle?) {
     setupTFLite()
     setupSensors()
     setupWebView()
+
+    val filter = IntentFilter("PREDICTION_UPDATE")
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        registerReceiver(predictionReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+    } else {
+        @Suppress("DEPRECATION")
+        registerReceiver(predictionReceiver, filter)
+    }
 
     cadenceTextView = findViewById(R.id.TextAvgNum)
     cadenceHandler.post(cadenceRunnable)
@@ -828,6 +858,7 @@ override fun onDestroy() {
     tflite?.close()
     super.onDestroy()
     breathingFeedbackTTS?.destroy()
+    unregisterReceiver(predictionReceiver)
 
     // *** 추가: 실행기 중지 (대기 작업 즉시 취소)
     executor.shutdownNow() // ***

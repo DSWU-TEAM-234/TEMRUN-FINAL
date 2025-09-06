@@ -27,10 +27,6 @@ class AudioRecorder(private val context: Context) {
     private var lastModel1ProcessTime = 0L
     private var lastModel2ProcessTime = 0L
 
-    // [ADD] 동시성 보호용 락 (최소 변경)
-    private val lock1 = Any()
-    private val lock2 = Any()
-
 
     fun setUserSettings(bpm: Int, pattern: String, breathingPattern: IntArray) {
         this.userBpm = bpm
@@ -89,61 +85,37 @@ class AudioRecorder(private val context: Context) {
 
     private fun addToBuffers(audioFloat: FloatArray) {
         // 모델1 버퍼 (3초)
-        // [WRAP] 동기화로 보호 (최소 변경)
-        synchronized(lock1) {
-            model1Buffer.addAll(audioFloat.toList())
-            if (model1Buffer.size > MODEL1_BUFFER_SIZE) {
-                val excess = model1Buffer.size - MODEL1_BUFFER_SIZE
-                repeat(excess) { model1Buffer.removeAt(0) }
-            }
+        model1Buffer.addAll(audioFloat.toList())
+        if (model1Buffer.size > MODEL1_BUFFER_SIZE) {
+            val excess = model1Buffer.size - MODEL1_BUFFER_SIZE
+            repeat(excess) { model1Buffer.removeAt(0) }
         }
 
         // 모델2 버퍼 (2초)
-        // [WRAP] 동기화로 보호 (최소 변경)
-        synchronized(lock2) {
-            model2Buffer.addAll(audioFloat.toList())
-            if (model2Buffer.size > MODEL2_BUFFER_SIZE) {
-                val excess = model2Buffer.size - MODEL2_BUFFER_SIZE
-                repeat(excess) { model2Buffer.removeAt(0) }
-            }
+        model2Buffer.addAll(audioFloat.toList())
+        if (model2Buffer.size > MODEL2_BUFFER_SIZE) {
+            val excess = model2Buffer.size - MODEL2_BUFFER_SIZE
+            repeat(excess) { model2Buffer.removeAt(0) }
         }
     }
 
     private fun processBuffersIfReady() {
         val now = System.currentTimeMillis()
-
-        // [ADD] 스냅샷 로컬 변수 (락 밖에서 처리하기 위함)
-        var frame1: FloatArray? = null
-        var frame2: FloatArray? = null
-
         // 모델1(3초) 처리: abnormalCount < threshold
-        if ( /* 기존 조건 유지 */ now - lastModel1ProcessTime >= MODEL1_RECORD_SECONDS * 1000 && !ModelInterpreter.shouldUseModel2() ) {
-            // [WRAP] toFloatArray()를 락 안에서 스냅샷으로 생성 → CME 방지
-            synchronized(lock1) {
-                if (model1Buffer.size >= MODEL1_BUFFER_SIZE) {
-                    frame1 = model1Buffer.toFloatArray()
-                    lastModel1ProcessTime = now // 스냅샷 생성 시점에만 갱신
-                }
-            }
+        if (model1Buffer.size >= MODEL1_BUFFER_SIZE &&
+            now - lastModel1ProcessTime >= MODEL1_RECORD_SECONDS * 1000 &&
+            !ModelInterpreter.shouldUseModel2()
+        ) {
+            processModel1(model1Buffer.toFloatArray())
+            lastModel1ProcessTime = now
         }
-
         // 모델2(2초) 처리: abnormalCount ≥ threshold
-        if ( /* 기존 조건 유지 */ now - lastModel2ProcessTime >= MODEL2_RECORD_SECONDS * 1000 && ModelInterpreter.shouldUseModel2() ) {
-            // [WRAP] toFloatArray()를 락 안에서 스냅샷으로 생성 → CME 방지
-            synchronized(lock2) {
-                if (model2Buffer.size >= MODEL2_BUFFER_SIZE) {
-                    frame2 = model2Buffer.toFloatArray()
-                    lastModel2ProcessTime = now // 스냅샷 생성 시점에만 갱신
-                }
-            }
-        }
-
-        // [KEEP] 락 밖에서 안전하게 처리
-        if (frame1 != null) {
-            processModel1(frame1!!)
-        }
-        if (frame2 != null) {
-            processModel2(frame2!!)
+        if (model2Buffer.size >= MODEL2_BUFFER_SIZE &&
+            now - lastModel2ProcessTime >= MODEL2_RECORD_SECONDS * 1000 &&
+            ModelInterpreter.shouldUseModel2()
+        ) {
+            processModel2(model2Buffer.toFloatArray())
+            lastModel2ProcessTime = now
         }
     }
 
@@ -156,7 +128,8 @@ class AudioRecorder(private val context: Context) {
 
             // 기존 브로드캐스트 로직...
             val intent = Intent("PREDICTION_UPDATE")
-            intent.putExtra("result", result)
+            intent.setPackage(context.packageName)
+            intent.putExtra("result1", result)
             context.sendBroadcast(intent)
 
             Log.d("AudioRecorder", "모델1 결과: $result")
@@ -172,6 +145,7 @@ class AudioRecorder(private val context: Context) {
 
             // 기존 브로드캐스트 로직...
             val intent = Intent("PREDICTION_UPDATE")
+            intent.setPackage(context.packageName)
             intent.putExtra("resultToTts", result)
             context.sendBroadcast(intent)
 
@@ -193,3 +167,4 @@ class AudioRecorder(private val context: Context) {
     }
 
 }
+
