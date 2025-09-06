@@ -39,21 +39,24 @@
             android:text="좋아요"
             android:layout_weight="1"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:backgroundTint="#8CC97F"/>
 
         <Button
             android:id="@+id/btnDislike"
             android:text="싫어요"
             android:layout_weight="1"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:backgroundTint="#8CC97F"/>
 
         <Button
             android:id="@+id/btnSkip"
             android:text="건너뛰기"
             android:layout_weight="1"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:backgroundTint="#8CC97F"/>
     </LinearLayout>
 
     <Button

@@ -135,7 +135,7 @@ class SurveyActivity : AppCompatActivity() {
                     webPlayer.loadUrl("about:blank")
                 }
         }
-        btnSubmitAll.isEnabled = songs.all { it.preference != Preference.NONE } || idx >= songs.lastIndex
+        updateSubmitEnabled()
     }
 
     // youtu.be/<id>?t=44 → https://www.youtube.com/embed/<id>?playsinline=1&start=44
@@ -156,7 +156,7 @@ class SurveyActivity : AppCompatActivity() {
             showSong(idx)
         } else {
             Toast.makeText(this, "제출 버튼을 눌러 전송하세요.", Toast.LENGTH_SHORT).show()
-            btnSubmitAll.isEnabled = true
+            updateSubmitEnabled()
         }
     }
 
@@ -275,6 +275,16 @@ class SurveyActivity : AppCompatActivity() {
         btnSkip.isEnabled = !loading
         btnSubmitAll.isEnabled = !loading
     }
+
+    private fun updateSubmitEnabled() {
+        val hasAtLeastOneLike = songs.any { it.preference == Preference.LIKE }
+        val allAnswered = songs.all { it.preference != Preference.NONE }
+        val reachedEnd = idx >= songs.lastIndex
+
+        // 최소 1개 LIKE가 있고, (모두 답했거나 마지막 곡까지 도달) 했을 때만 활성화
+        btnSubmitAll.isEnabled = hasAtLeastOneLike && (allAnswered || reachedEnd)
+    }
+
 
     override fun onResume() { super.onResume(); webPlayer.onResume() }
     override fun onPause() { webPlayer.onPause(); super.onPause() }
