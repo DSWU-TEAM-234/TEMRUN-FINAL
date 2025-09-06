@@ -3,6 +3,7 @@ package com.temrun_finalprojects.song_feedback
 import android.content.Intent
 import android.os.Bundle
 import android.os.Looper
+import android.view.View
 import android.webkit.WebView
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -22,6 +23,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import com.temrun_finalprojects.config.ApiConfig
 import com.temrun_finalprojects.util.Constants.BASE_URL
+private lateinit var btnPrev: Button
+
 
 class SurveyActivity : AppCompatActivity() {
 
@@ -50,7 +53,7 @@ class SurveyActivity : AppCompatActivity() {
     private lateinit var tvMeta: TextView
     private lateinit var btnLike: Button
     private lateinit var btnDislike: Button
-    private lateinit var btnSkip: Button
+//    private lateinit var btnSkip: Button
     private lateinit var btnSubmitAll: Button
     private lateinit var progress: ProgressBar
     private lateinit var webPlayer: WebView
@@ -109,18 +112,30 @@ class SurveyActivity : AppCompatActivity() {
         tvMeta = findViewById(R.id.tvMeta)
         btnLike = findViewById(R.id.btnLike)
         btnDislike = findViewById(R.id.btnDislike)
-        btnSkip = findViewById(R.id.btnSkip)
+//        btnSkip = findViewById(R.id.btnSkip)
         btnSubmitAll = findViewById(R.id.btnSubmitAll)
         progress = findViewById(R.id.progress)
         webPlayer = findViewById(R.id.webPlayer)
+        btnPrev = findViewById(R.id.btnPrev)
     }
 
     private fun bindClicks() {
         btnLike.setOnClickListener { markAndNext(Preference.LIKE) }
         btnDislike.setOnClickListener { markAndNext(Preference.DISLIKE) }
-        btnSkip.setOnClickListener { markAndNext(Preference.NONE) }
+//        btnSkip.setOnClickListener { markAndNext(Preference.NONE) }
         btnSubmitAll.setOnClickListener { sendAllFeedbacks() }
+
+        // ⬇ 이전 곡으로 (선택값은 유지)
+        btnPrev.setOnClickListener {
+            if (idx > 0) {
+                idx--
+                showSong(idx)            // 내부에서 버튼 상태 갱신
+            } else {
+                Toast.makeText(this, "첫 곡입니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
+
 
     private fun showSong(i: Int) {
         if (i in songs.indices) {
@@ -269,21 +284,24 @@ class SurveyActivity : AppCompatActivity() {
             runOnUiThread { setLoading(loading) }
             return
         }
-        progress.visibility = if (loading) android.view.View.VISIBLE else android.view.View.GONE
+        progress.visibility = if (loading) View.VISIBLE else View.GONE
         btnLike.isEnabled = !loading
         btnDislike.isEnabled = !loading
-        btnSkip.isEnabled = !loading
-        btnSubmitAll.isEnabled = !loading
+//        btnSkip.isEnabled = !loading
+        btnPrev.isEnabled = !loading && idx > 0
+        btnSubmitAll.isEnabled = !loading && btnSubmitAll.isEnabled
     }
+
 
     private fun updateSubmitEnabled() {
         val hasAtLeastOneLike = songs.any { it.preference == Preference.LIKE }
         val allAnswered = songs.all { it.preference != Preference.NONE }
         val reachedEnd = idx >= songs.lastIndex
 
-        // 최소 1개 LIKE가 있고, (모두 답했거나 마지막 곡까지 도달) 했을 때만 활성화
         btnSubmitAll.isEnabled = hasAtLeastOneLike && (allAnswered || reachedEnd)
+        btnPrev.isEnabled = idx > 0                               // ⬅ 추가
     }
+
 
 
     override fun onResume() { super.onResume(); webPlayer.onResume() }

@@ -26,10 +26,10 @@ class StartActivity : AppCompatActivity() {
 //            getSharedPreferences(name, android.content.Context.MODE_PRIVATE)
 //                .edit().clear().apply()
 //        }
-//
+
 ////        디버그용
 //        startActivity(
-//            Intent(this, RootActivity::class.java))
+//            Intent(this,  SurveyActivity::class.java))
 
 
 
