@@ -2,18 +2,17 @@ package com.temrun_finalprojects.calendar
 
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.temrun_finalprojects.R
 import com.temrun_finalprojects.config.ApiConfig
 import com.temrun_finalprojects.result.RunningResultBottomSheet
-import com.temrun_finalprojects.util.Constants.BASE_URL
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -45,8 +44,9 @@ class SessionActivity : AppCompatActivity(), SessionAdapter.OnSessionClickListen
     companion object {
         const val EXTRA_DATE = "extra_date"
         // 교체
-//        private const val BASE_URL = "https://4382a6a5c3d2.ngrok-free.app"
-        //private const val USER_ID = "user123"
+//        private const val BASE_URL = "https://339cdd456ce9.ngrok-free.app"
+        private const val USER_ID = "user123"
+        private const val DATE = "2025-02-09"
 
     }
 
@@ -55,17 +55,26 @@ class SessionActivity : AppCompatActivity(), SessionAdapter.OnSessionClickListen
     private lateinit var progress: ProgressBar
     private lateinit var rvSessions: RecyclerView
     private lateinit var adapter: SessionAdapter
+    private lateinit var btnBack: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_session)
 
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        // 액션바 뒤로가기(홈) 아이콘은 사용하지 않습니다.
+        // supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         tvSelectedDate = findViewById(R.id.tvSelectedDate)
         tvEmpty = findViewById(R.id.tvEmpty)
         progress = findViewById(R.id.progress)
         rvSessions = findViewById(R.id.rvSessions)
+        btnBack = findViewById(R.id.btnBack)
+
+        // 커스텀 백버튼 클릭 시 시스템 뒤로가기와 동일하게 처리
+        btnBack.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+            // 또는 finish()
+        }
 
         // RecyclerView setup
         adapter = SessionAdapter(this)
@@ -79,7 +88,8 @@ class SessionActivity : AppCompatActivity(), SessionAdapter.OnSessionClickListen
             return
         }
 
-        supportActionBar?.title = dateText
+        // 액션바 제목 대신 상단 TextView에 날짜 노출
+        // supportActionBar?.title = dateText
         tvSelectedDate.text = dateText
 
         loadSessions(dateText)
@@ -96,7 +106,6 @@ class SessionActivity : AppCompatActivity(), SessionAdapter.OnSessionClickListen
             .build()
 
         val retrofit = Retrofit.Builder()
-//          .baseUrl(BASE_URL)
             .baseUrl(ApiConfig.getBaseUrl())
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
