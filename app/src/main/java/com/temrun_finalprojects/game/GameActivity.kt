@@ -39,6 +39,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.temrun_finalprojects.R
 import com.temrun_finalprojects.result.ResultActivity
+import kotlin.jvm.java
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -109,7 +110,7 @@ class GameActivity : AppCompatActivity(), SensorEventListener {
 //        val cadence = intent.getIntExtra("cadence", -1)  // -1은 기본값 (예외 대비)
         //내려오는 바 생성
         startSpawningBars(bpm = 140.toLong())
-        startToneMetronome(140.toLong())
+        //startToneMetronome(140.toLong())
 
         val guitarView = findViewById<ImageView>(R.id.instrument1)
         val drumView = findViewById<ImageView>(R.id.instrument2)
