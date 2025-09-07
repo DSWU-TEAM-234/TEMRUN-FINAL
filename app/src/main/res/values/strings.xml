@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">demoApp</string>
+    <string name="app_name">TemRun</string>
     <string name="running_button_description">running_stop_button</string>
     <string name="music_button_description">music_play_button</string>
     <!-- TODO: Remove or change this placeholder text -->
