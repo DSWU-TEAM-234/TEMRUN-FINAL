@@ -158,6 +158,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val tfliteLock = Any() // ***
     @Volatile private var isInterpreterClosed = false // ***
 
+    private var isPredictionReceiverRegistered = false
+
 /*
 // TODO: 서버 재기동 시 교체
 private val BASE_URL ="https://4382a6a5c3d2.ngrok-free.app"
@@ -165,7 +167,6 @@ private val BASE_URL ="https://4382a6a5c3d2.ngrok-free.app"
 private val START_RUN_URL = "$BASE_URL/api/runs/start"
 // 추천 트랙 API
 private val RECO_URL = "$BASE_URL/api/recommend"
-
  */
 
     private fun getStartRunUrl() = ApiConfig.getStartRunUrl()
@@ -247,13 +248,7 @@ override fun onCreate(savedInstanceState: Bundle?) {
     setupSensors()
     setupWebView()
 
-    val filter = IntentFilter("PREDICTION_UPDATE")
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        registerReceiver(predictionReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-    } else {
-        @Suppress("DEPRECATION")
-        registerReceiver(predictionReceiver, filter)
-    }
+    registerPredictionReceiverIfNeeded()
 
     cadenceTextView = findViewById(R.id.TextAvgNum)
     cadenceHandler.post(cadenceRunnable)
@@ -561,110 +556,110 @@ private fun sendTracksToWebViewSafe(jsonText: String) {
     webView.evaluateJavascript(js, null)
 }
 
-private fun tryKickstartSpotifyWebPlayback(firstTrackUri: String) {
-    val token = accessToken ?: run {
-        Log.e("SPOTIFY", "액세스 토큰 없음"); return
-    }
-
-    // 1) 내 디바이스 목록
-    val devicesReq = okhttp3.Request.Builder()
-        .url("https://api.spotify.com/v1/me/player/devices")
-        .get()
-        .addHeader("Authorization", "Bearer $token")
-        .build()
-
-    httpClient.newCall(devicesReq).enqueue(object : okhttp3.Callback {
-        override fun onFailure(call: okhttp3.Call, e: IOException) {
-            Log.e("SPOTIFY", "devices 조회 실패", e)
-        }
-
-        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-            response.use { res ->
-                val body = res.body?.string().orEmpty()
-                if (!res.isSuccessful) {
-                    Log.e("SPOTIFY", "devices HTTP ${res.code}: $body")
-                    return
-                }
-                val devices = try {
-                    org.json.JSONObject(body).optJSONArray("devices") ?: org.json.JSONArray()
-                } catch (e: org.json.JSONException) {
-                    Log.e("SPOTIFY", "devices 파싱 실패: $body", e)
-                    org.json.JSONArray()
-                }
-
-                // 웹에서 만든 플레이어 이름과 동일해야 함 (웹 코드: name: "TRUE Main Spotify Player")
-                var targetId: String? = null
-                for (i in 0 until devices.length()) {
-                    val d = devices.optJSONObject(i) ?: continue
-                    val name = d.optString("name", "")
-                    val id = d.optString("id", "")
-                    if (name.contains("TRUE Main Spotify Player")) { targetId = id; break }
-                }
-
-                if (targetId.isNullOrBlank()) {
-                    Log.e("SPOTIFY", "웹 플레이어 디바이스를 찾지 못함(아직 connect 안 됐을 수 있음).")
-                    return
-                }
-
-                // 2) 해당 디바이스로 전송(활성화)
-                val transferJson = org.json.JSONObject().apply {
-                    put("device_ids", org.json.JSONArray().put(targetId))
-                    put("play", false)
-                }
-                val transferReq = okhttp3.Request.Builder()
-                    .url("https://api.spotify.com/v1/me/player")
-                    .put(transferJson.toString().toRequestBody(JSON_MEDIA))
-                    .addHeader("Authorization", "Bearer $token")
-                    .addHeader("Content-Type", "application/json")
-                    .build()
-
-                httpClient.newCall(transferReq).enqueue(object : okhttp3.Callback {
-                    override fun onFailure(call: okhttp3.Call, e: IOException) {
-                        Log.e("SPOTIFY", "transfer 실패", e)
-                    }
-
-                    override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                        response.use { tr ->
-                            val tb = tr.body?.string().orEmpty()
-                            if (!tr.isSuccessful) {
-                                Log.e("SPOTIFY", "transfer HTTP ${tr.code}: $tb")
-                                return
-                            }
-
-                            // 3) 첫 트랙 재생
-                            val playJson = org.json.JSONObject().apply {
-                                put("uris", org.json.JSONArray().put(firstTrackUri))
-                                put("position_ms", 0)
-                            }
-                            val playReq = okhttp3.Request.Builder()
-                                .url("https://api.spotify.com/v1/me/player/play?device_id=$targetId")
-                                .put(playJson.toString().toRequestBody(JSON_MEDIA))
-                                .addHeader("Authorization", "Bearer $token")
-                                .addHeader("Content-Type", "application/json")
-                                .build()
-
-                            httpClient.newCall(playReq).enqueue(object : okhttp3.Callback {
-                                override fun onFailure(call: okhttp3.Call, e: IOException) {
-                                    Log.e("SPOTIFY", "play 실패", e)
-                                }
-                                override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                                    response.use { pr ->
-                                        val pb = pr.body?.string().orEmpty()
-                                        if (!pr.isSuccessful) {
-                                            Log.e("SPOTIFY", "play HTTP ${pr.code}: $pb")
-                                        } else {
-                                            Log.d("SPOTIFY", "play OK (웹 플레이어로 킥)")
-                                        }
-                                    }
-                                }
-                            })
-                        }
-                    }
-                })
-            }
-        }
-    })
-}
+//private fun tryKickstartSpotifyWebPlayback(firstTrackUri: String) {
+//    val token = accessToken ?: run {
+//        Log.e("SPOTIFY", "액세스 토큰 없음"); return
+//    }
+//
+//    // 1) 내 디바이스 목록
+//    val devicesReq = okhttp3.Request.Builder()
+//        .url("https://api.spotify.com/v1/me/player/devices")
+//        .get()
+//        .addHeader("Authorization", "Bearer $token")
+//        .build()
+//
+//    httpClient.newCall(devicesReq).enqueue(object : okhttp3.Callback {
+//        override fun onFailure(call: okhttp3.Call, e: IOException) {
+//            Log.e("SPOTIFY", "devices 조회 실패", e)
+//        }
+//
+//        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+//            response.use { res ->
+//                val body = res.body?.string().orEmpty()
+//                if (!res.isSuccessful) {
+//                    Log.e("SPOTIFY", "devices HTTP ${res.code}: $body")
+//                    return
+//                }
+//                val devices = try {
+//                    org.json.JSONObject(body).optJSONArray("devices") ?: org.json.JSONArray()
+//                } catch (e: org.json.JSONException) {
+//                    Log.e("SPOTIFY", "devices 파싱 실패: $body", e)
+//                    org.json.JSONArray()
+//                }
+//
+//                // 웹에서 만든 플레이어 이름과 동일해야 함 (웹 코드: name: "TRUE Main Spotify Player")
+//                var targetId: String? = null
+//                for (i in 0 until devices.length()) {
+//                    val d = devices.optJSONObject(i) ?: continue
+//                    val name = d.optString("name", "")
+//                    val id = d.optString("id", "")
+//                    if (name.contains("TRUE Main Spotify Player")) { targetId = id; break }
+//                }
+//
+//                if (targetId.isNullOrBlank()) {
+//                    Log.e("SPOTIFY", "웹 플레이어 디바이스를 찾지 못함(아직 connect 안 됐을 수 있음).")
+//                    return
+//                }
+//
+//                // 2) 해당 디바이스로 전송(활성화)
+//                val transferJson = org.json.JSONObject().apply {
+//                    put("device_ids", org.json.JSONArray().put(targetId))
+//                    put("play", false)
+//                }
+//                val transferReq = okhttp3.Request.Builder()
+//                    .url("https://api.spotify.com/v1/me/player")
+//                    .put(transferJson.toString().toRequestBody(JSON_MEDIA))
+//                    .addHeader("Authorization", "Bearer $token")
+//                    .addHeader("Content-Type", "application/json")
+//                    .build()
+//
+//                httpClient.newCall(transferReq).enqueue(object : okhttp3.Callback {
+//                    override fun onFailure(call: okhttp3.Call, e: IOException) {
+//                        Log.e("SPOTIFY", "transfer 실패", e)
+//                    }
+//
+//                    override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+//                        response.use { tr ->
+//                            val tb = tr.body?.string().orEmpty()
+//                            if (!tr.isSuccessful) {
+//                                Log.e("SPOTIFY", "transfer HTTP ${tr.code}: $tb")
+//                                return
+//                            }
+//
+//                            // 3) 첫 트랙 재생
+//                            val playJson = org.json.JSONObject().apply {
+//                                put("uris", org.json.JSONArray().put(firstTrackUri))
+//                                put("position_ms", 0)
+//                            }
+//                            val playReq = okhttp3.Request.Builder()
+//                                .url("https://api.spotify.com/v1/me/player/play?device_id=$targetId")
+//                                .put(playJson.toString().toRequestBody(JSON_MEDIA))
+//                                .addHeader("Authorization", "Bearer $token")
+//                                .addHeader("Content-Type", "application/json")
+//                                .build()
+//
+//                            httpClient.newCall(playReq).enqueue(object : okhttp3.Callback {
+//                                override fun onFailure(call: okhttp3.Call, e: IOException) {
+//                                    Log.e("SPOTIFY", "play 실패", e)
+//                                }
+//                                override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+//                                    response.use { pr ->
+//                                        val pb = pr.body?.string().orEmpty()
+//                                        if (!pr.isSuccessful) {
+//                                            Log.e("SPOTIFY", "play HTTP ${pr.code}: $pb")
+//                                        } else {
+//                                            Log.d("SPOTIFY", "play OK (웹 플레이어로 킥)")
+//                                        }
+//                                    }
+//                                }
+//                            })
+//                        }
+//                    }
+//                })
+//            }
+//        }
+//    })
+//}
 
 
 fun startMetronome(bpm: Int) {
@@ -835,7 +830,7 @@ override fun onResume() {
     accelerometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }
     gyroscope?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }
 
-    registerReceiver(predictionReceiver, IntentFilter("PREDICTION_UPDATE"), Context.RECEIVER_NOT_EXPORTED)
+    registerPredictionReceiverIfNeeded()
 }
 
 override fun onPause() {
@@ -850,7 +845,7 @@ override fun onPause() {
         if (v is RippleBackground) v.stopRippleAnimation()
         rippleHost.removeViewAt(i)
     }
-    unregisterReceiver(predictionReceiver)
+    unregisterPredictionReceiverIfNeeded()
 }
 
 override fun onDestroy() {
@@ -858,7 +853,7 @@ override fun onDestroy() {
     tflite?.close()
     super.onDestroy()
     breathingFeedbackTTS?.destroy()
-    unregisterReceiver(predictionReceiver)
+    unregisterPredictionReceiverIfNeeded()
 
     // *** 추가: 실행기 중지 (대기 작업 즉시 취소)
     executor.shutdownNow() // ***
@@ -965,6 +960,30 @@ private fun setupLayoutConstraints() {
         }
     }
 }
+
+    private fun registerPredictionReceiverIfNeeded() {
+        if (isPredictionReceiverRegistered) return
+        val filter = IntentFilter("PREDICTION_UPDATE")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(predictionReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("DEPRECATION")
+            registerReceiver(predictionReceiver, filter)
+        }
+        isPredictionReceiverRegistered = true
+    }
+
+    private fun unregisterPredictionReceiverIfNeeded() {
+        if (!isPredictionReceiverRegistered) return
+        try {
+            unregisterReceiver(predictionReceiver)
+        } catch (e: IllegalArgumentException) {
+            Log.w("MainActivity", "predictionReceiver already unregistered", e)
+        } finally {
+            isPredictionReceiverRegistered = false
+        }
+    }
+
 
 // ------------------------- 서버 API: 러닝 세션 시작 -------------------------
 /**
@@ -1122,9 +1141,9 @@ private fun fetchRecommendedTracks(
                         sendTracksToWebViewSafe(arr.toString())
 
                         // 첫 곡 URI 뽑아서, 웹이 자동재생을 못할 때를 대비해 안드가 한 번 킥
-                        extractFirstTrackUri(arr)?.let { firstUri ->
-                            tryKickstartSpotifyWebPlayback(firstUri)
-                        }
+//                        extractFirstTrackUri(arr)?.let { firstUri ->
+//                            //tryKickstartSpotifyWebPlayback(firstUri)
+//                        }
 
                     } else {
                         Log.w("RECO", "추천 0건 - 재생하지 않음")
