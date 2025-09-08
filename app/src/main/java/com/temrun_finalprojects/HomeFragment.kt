@@ -1,5 +1,8 @@
 package com.temrun_finalprojects
 
+
+import com.temrun_finalprojects.util.Metronome
+
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -25,6 +28,8 @@ class HomeFragment : Fragment() {
     private var total = 0
 
     private var recorder: AudioRecorder? = null
+    // 멤버로 보관하면 나중에 stop() 가능
+    private var metronome: Metronome? = null
 
     private fun getVibrator(): Vibrator? {
         val ctx = context ?: return null
@@ -158,7 +163,7 @@ class HomeFragment : Fragment() {
         val btnBpmVibe = view.findViewById<Button>(R.id.btn_bpm_vibe)
         btnBpmVibe?.setOnClickListener {
             // 현재 선택된 cadenceValue 기준으로 8박, 박자당 35ms 진동
-            vibrateToBpm(cadenceValue, beats = 8, pulseMs = 35L)
+            startFeedback(cadenceValue, beats = 8, pulseMs = 35L)
         }
 
         val btnConfirm = view.findViewById<Button>(R.id.btn_start_running)
@@ -195,6 +200,28 @@ class HomeFragment : Fragment() {
         return view
     }
 
+    // 기존 startFeedback() 치환 (내용만 교체)
+    private fun startFeedback(bpm: Int, beats: Int = 8, pulseMs: Long = 35L) {
+        vibrateToBpm(bpm, beats, pulseMs) // 기존 진동 그대로 병행
+
+        // 애니메이션 콜백 없이 소리만
+        metronome = Metronome(
+            context = requireContext(),
+            onFinished = {
+                // 필요 시 완료 처리 로직 (없으면 비워둬도 됨)
+            }
+        ).also {
+            it.start(bpm = bpm, beats = beats, pulseMs = pulseMs)
+        }
+    }
+
+    private fun stopFeedback() {
+        metronome?.stop()
+        metronome = null
+        try { getVibrator()?.cancel() } catch (_: Throwable) {}
+    }
+
+
     private fun styleSelectedTextOnly(picker: NumberPicker) {
         picker.post {
             for (i in 0 until picker.childCount) {
@@ -223,6 +250,6 @@ class HomeFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         // 화면 떠날 때 남아있는 진동이 있으면 중지
-        getVibrator()?.cancel()
+        stopFeedback()
     }
 }
