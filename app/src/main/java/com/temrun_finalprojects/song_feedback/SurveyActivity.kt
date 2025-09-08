@@ -34,7 +34,7 @@ class SurveyActivity : AppCompatActivity() {
         SongFeedback(id = "spotify:track:4ytyLpIwUXbdFsNOvgNnmP", title = "사계", artist = "태연"),
         SongFeedback(id = "spotify:track:0hqj5JBnFt1BHEz2UCFwrl", title = "어떻게 이별까지 사랑하겠어, 널 사랑하는 거지", artist = "AKMU"),
         SongFeedback(id = "spotify:track:16FsCP14q4NnOmygfIy3WP", title = "Colors", artist = "스텔라장"),
-        SongFeedback(id = "spotify:track:24ntZeyCrVePmN3nUYhfLx", title = "불가행력", artist = "Vaundy")
+        SongFeedback(id = "spotify:track:0U1nO2frLx8w2dIsfvlP1d", title = "Hell At Night", artist = "BigXthaPlug")
     )
 
     // SpotifyID → YouTube 전체 링크(하이라이트 URL)
@@ -43,7 +43,7 @@ class SurveyActivity : AppCompatActivity() {
         "spotify:track:4ytyLpIwUXbdFsNOvgNnmP"  to "https://youtu.be/4HG_CJzyX6A?feature=shared&t=72",
         "spotify:track:0hqj5JBnFt1BHEz2UCFwrl"   to "https://youtu.be/m3DZsBw5bnE?feature=shared&t=82",
         "spotify:track:16FsCP14q4NnOmygfIy3WP"  to "https://youtu.be/LMLdOpwHtIg?feature=shared&t=34",
-        "spotify:track:24ntZeyCrVePmN3nUYhfLx"  to "https://youtu.be/Gbz2C2gQREI?feature=shared&t=41"
+        "spotify:track:0U1nO2frLx8w2dIsfvlP1d"  to "https://youtu.be/VQpmWQU5_8E?feature=shared&t=35"
     )
 
     private var idx = 0
