@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mypageRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <!-- 간단한 프로필/설정 섹션 예시 -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:text="마이페이지"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <!-- ... 필요시 계정/앱 설정 항목 추가 ... -->
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="#DDDDDD" />
+
+    <TextView
+        android:id="@+id/tvAccountSection"
+        android:text="계정 관리"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/btnDeleteAccount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="회원탈퇴"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="12dp"
+        android:backgroundTint="#BC4848" />
+
+</LinearLayout>

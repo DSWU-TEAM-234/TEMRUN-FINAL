@@ -8,7 +8,7 @@
     tools:context=".calendar.CalendarFragment"
     android:background="@color/Graywhite">
 
-    <!-- ✅ 상단 고정 헤더 -->
+    <!-- 상단 고정 헤더 -->
     <LinearLayout
         android:id="@+id/header"
         android:layout_width="0dp"
@@ -22,7 +22,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- 러닝 제목 -->
         <TextView
             android:id="@+id/tv_title"
             android:layout_width="0dp"
@@ -33,7 +32,6 @@
             android:textStyle="bold"
             android:textColor="#1A1A1A" />
 
-        <!-- 도움말 아이콘 -->
         <ImageView
             android:id="@+id/iv_help"
             android:layout_width="24dp"
@@ -51,7 +49,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp" />
 
-    <!-- ✅ 달력 상단 요약 박스 -->
+    <!-- 달력 상단 요약 박스 -->
     <LinearLayout
         android:id="@+id/calendarSummaryBox"
         android:layout_width="0dp"
@@ -69,7 +67,7 @@
             android:id="@+id/textViewYear"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="2025"
+            android:text=""
             android:textSize="14sp"
             android:textColor="#4A4A4A" />
 
@@ -78,7 +76,7 @@
             android:id="@+id/textViewMonth"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="06"
+            android:text=""
             android:textSize="32sp"
             android:textStyle="bold"
             android:textColor="#1A1A1A"
@@ -119,26 +117,25 @@
                 android:id="@+id/textViewSummary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="60:45 / 178BPM / 1000kcal"
+                android:text=""
                 android:textSize="16sp"
                 android:textColor="#45AD5B"
                 android:layout_marginTop="2dp"
                 android:gravity="center" />
-        </LinearLayout> <!-- ✅ monthSummaryBox 닫힘 -->
-    </LinearLayout> <!-- ✅ calendarSummaryBox 닫힘 -->
+        </LinearLayout>
+    </LinearLayout>
 
-    <!-- ✅ MaterialCalendarView 추가 -->
+    <!-- MaterialCalendarView -->
     <com.prolificinteractive.materialcalendarview.MaterialCalendarView
         android:id="@+id/calendarView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:mcv_showOtherDates="all"
-        app:mcv_selectionColor="@color/Graywhite"
-        app:mcv_tileWidth="48dp"
-        app:mcv_tileHeight="48dp"
-        app:mcv_firstDayOfWeek="monday"
-        app:layout_constraintTop_toBottomOf="@+id/calendarSummaryBox"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
+        app:layout_constraintTop_toBottomOf="@+id/calendarSummaryBox"
+        app:mcv_firstDayOfWeek="monday"
+        app:mcv_selectionColor="@android:color/transparent"
+        app:mcv_showOtherDates="all"
+        app:mcv_tileHeight="48dp"
+        app:mcv_tileWidth="48dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp"
+    android:background="@android:color/white">
+
+<!--    &lt;!&ndash; 뒤로가기 버튼 &ndash;&gt;-->
+<!--    <ImageButton-->
+<!--        android:id="@+id/btnBack"-->
+<!--        android:layout_width="40dp"-->
+<!--        android:layout_height="40dp"-->
+<!--        android:background="?attr/selectableItemBackgroundBorderless"-->
+<!--        android:src="@drawable/ic_back"-->
+<!--        android:contentDescription="뒤로가기"-->
+<!--        android:layout_gravity="start" />-->
+
+<!--    &lt;!&ndash; Spotify 로고 &ndash;&gt;-->
+<!--    <ImageView-->
+<!--        android:id="@+id/imgLogo"-->
+<!--        android:layout_width="50dp"-->
+<!--        android:layout_height="50dp"-->
+<!--        android:layout_gravity="center"-->
+<!--        android:layout_marginTop="32dp"-->
+<!--        android:src="@drawable/ic_spotify_logo" />-->
+
+<!--    &lt;!&ndash; 설명 &ndash;&gt;-->
+<!--    <TextView-->
+<!--        android:id="@+id/tvTitle"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Spotify로 시작하기"-->
+<!--        android:textSize="20sp"-->
+<!--        android:textStyle="bold"-->
+<!--        android:layout_gravity="center"-->
+<!--        android:layout_marginTop="16dp" />-->
+
+<!--    <TextView-->
+<!--        android:id="@+id/tvDesc"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Spotify 계정이 있어야 로그인할 수 있어요"-->
+<!--        android:textSize="14sp"-->
+<!--        android:textColor="#888888"-->
+<!--        android:layout_gravity="center"-->
+<!--        android:layout_marginBottom="32dp" />-->
+
+<!--    &lt;!&ndash; ID 입력 &ndash;&gt;-->
+<!--    <EditText-->
+<!--        android:id="@+id/editId"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:hint="ID"-->
+<!--        android:inputType="textEmailAddress" />-->
+
+<!--    &lt;!&ndash; 비밀번호 입력 &ndash;&gt;-->
+<!--    <EditText-->
+<!--        android:id="@+id/editPassword"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:hint="Password"-->
+<!--        android:inputType="textPassword"-->
+<!--        android:layout_marginTop="8dp" />-->
+
+<!--    &lt;!&ndash; 계속 버튼 &ndash;&gt;-->
+<!--    <Button-->
+<!--        android:id="@+id/btnContinue"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="계속"-->
+<!--        android:textColor="@android:color/black"-->
+<!--        android:backgroundTint="#1ED760"-->
+<!--        android:layout_marginTop="24dp" />-->
+
+
+
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+
+
+
+</LinearLayout>
