@@ -34,14 +34,18 @@
         android:orientation="horizontal">
 
         <ImageView
+            android:id="@+id/btnLike"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginRight="10dp"
-            android:src="@drawable/thumb_up_line" />
+            android:src="@drawable/thumb_up_line"
+            android:background="?attr/selectableItemBackgroundBorderless" />
 
         <ImageView
+            android:id="@+id/btnDislike"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/thumb_down_line" />
+            android:src="@drawable/thumb_down_line"
+            android:background="?attr/selectableItemBackgroundBorderless"/>
     </LinearLayout>
 </LinearLayout>

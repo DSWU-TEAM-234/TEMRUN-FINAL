@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <!-- ← 버튼 -->
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_back"
+            android:contentDescription="뒤로가기" />
+
+        <!-- 제목 -->
+        <TextView
+            android:text="프로필 설정하기"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <FrameLayout
+            android:id="@+id/profileImageContainer"
+            android:layout_width="84dp"
+            android:layout_height="84dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <!-- 회색 배경의 프로필 사진 -->
+            <ImageView
+                android:id="@+id/imageProfile"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:clipToOutline="true"
+                android:background="@drawable/ic_profile_placeholder" />
+
+            <!-- + 버튼 -->
+            <ImageButton
+                android:id="@+id/btnAddProfileImage"
+                android:layout_width="17dp"
+                android:layout_height="17dp"
+                android:src="@drawable/ic_add"
+                android:backgroundTint="#A4D96F"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_gravity="bottom|end"
+                android:translationX="0dp"
+                android:translationY="0dp"
+                android:contentDescription="프로필 이미지 추가" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp">
+            <!-- 닉네임 -->
+            <EditText
+                android:id="@+id/editNickname"
+                android:hint="닉네임"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"/>
+
+            <!-- 성별 -->
+            <Spinner
+                android:id="@+id/spinnerGender"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- 키 / 몸무게 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp">
+
+            <EditText
+                android:id="@+id/editHeight"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:hint="키(cm)"
+                android:inputType="numberDecimal" />
+
+            <Space android:layout_width="16dp" android:layout_height="0dp" />
+
+            <EditText
+                android:id="@+id/editWeight"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:hint="몸무게(kg)"
+                android:inputType="numberDecimal" />
+        </LinearLayout>
+
+        <!-- 생년월일 -->
+        <TextView
+            android:text="생년월일"
+            android:layout_marginTop="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Spinner
+                android:id="@+id/spinnerYear"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content" />
+
+            <Spinner
+                android:id="@+id/spinnerMonth"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content" />
+
+            <Spinner
+                android:id="@+id/spinnerDay"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- 시작하기 버튼 -->
+        <Button
+            android:id="@+id/btnStart"
+            android:layout_marginTop="24dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="시작하기"
+            android:textColor="@android:color/white"
+            android:backgroundTint="#1DB954" />
+    </LinearLayout>
+</ScrollView>

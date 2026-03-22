@@ -7,4 +7,9 @@
     <color name="green_selected">#8CC97F</color>
     <color name="G_white">#F8F8F8</color>
     <color name="G_dark_gray">#959595</color>
+    <color name="light_gray">#E0E0E0</color>
+    <color name="teal_700">#018786</color>
+    <color name="purple_500">#6200EE</color>
+    <color name="orange_500">#FF9800</color>
+    <color name="green_run_day">#D7ECD7</color>
 </resources>
