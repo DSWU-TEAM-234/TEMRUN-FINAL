@@ -17,6 +17,10 @@ import java.io.IOException
 class AudioRecorder(private val context: Context) {
     private val handler = Handler()
 
+    @Volatile private var isRecording = false;
+    private var audioRecord: AudioRecord? = null;
+    private var recordThread: Thread? = null
+
 
     private var userBpm: Int = 150
     private var userPattern: String = "2:1"
@@ -34,7 +38,20 @@ class AudioRecorder(private val context: Context) {
         this.userBreathingPattern = breathingPattern
     }
 
+    // "1_1" / "2:1" 어느 형식이든 허용
+    fun setUserSettings(bpm: Int, pattern: String) {
+        val normalized = pattern.replace("_", ":")
+        val parts = normalized.split(":").mapNotNull { it.trim().toIntOrNull() }
+        val arr = if (parts.size == 2) parts.toIntArray() else intArrayOf(2, 1)
+        setUserSettings(bpm, normalized, arr)
+        Log.d("Recording status", "settings: bpm=$bpm, pattern=$normalized, arr=${arr.toList()}")
+    }
+
     fun startRecording() {
+        if (isRecording) {
+            Log.d("Recording status", "중복 녹음이 감지!")
+            return
+        } // 중복 시작 방지
         // 🔐 권한 체크
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
             != PackageManager.PERMISSION_GRANTED
@@ -42,46 +59,82 @@ class AudioRecorder(private val context: Context) {
             Toast.makeText(context, "녹음 권한이 필요합니다", Toast.LENGTH_SHORT).show()
             return
         }
-
-        Thread(Runnable {
-            val recorder: AudioRecord
-            try {
-                recorder = AudioRecord(
-                    MediaRecorder.AudioSource.MIC,
-                    com.temrun_finalprojects.breathing.audio.AudioRecorder.Companion.SAMPLE_RATE,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT,
-                    MODEL1_BUFFER_SIZE * 2)
-                recorder.startRecording()
-                Log.d("AudioRecoder", "스타트 리코딩 부분 무사 통과.")
+        isRecording = true
+        Log.d("Recording status", "녹음 중")
+//        Thread(Runnable {
+//            val recorder: AudioRecord
+//            try {
+//                recorder = AudioRecord(
+//                    MediaRecorder.AudioSource.MIC,
+//                    com.temrun_finalprojects.breathing.audio.AudioRecorder.Companion.SAMPLE_RATE,
+//                    AudioFormat.CHANNEL_IN_MONO,
+//                    AudioFormat.ENCODING_PCM_16BIT,
+//                    MODEL1_BUFFER_SIZE * 2)
+//                recorder.startRecording()
+//                Log.d("AudioRecoder", "스타트 리코딩 부분 무사 통과.")
+//            } catch (e: SecurityException) {
+//                e.printStackTrace()
+//                handler.post {
+//                    Toast.makeText(
+//                        context,
+//                        "녹음 권한이 없습니다",
+//                        Toast.LENGTH_SHORT
+//                    ).show()
+//                }
+//                return@Runnable
+//            }
+//
+//            val audioBuffer = ShortArray(1024)  // 작은 청크로 연속 읽기
+//            while (true) {
+//                val read = recorder.read(audioBuffer, 0, 1024)
+//                if (read > 0) {
+//                    val audioFloat = FloatArray(read)
+//                    for (i in 0 until read) {
+//                        audioFloat[i] = audioBuffer[i] / 32768f
+//                    }
+//                    // 각 모델 버퍼에 추가
+//                    addToBuffers(audioFloat)
+//                    // 버퍼가 준비되면 처리
+//                    processBuffersIfReady()
+//                }
+//            }
+//        }).start()
+        recordThread = Thread {
+            val rec = try {
+                AudioRecord(
+                    MediaRecorder.AudioSource.MIC, SAMPLE_RATE,
+                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
+                    MODEL1_BUFFER_SIZE * 2
+                ).also { it.startRecording() }
             } catch (e: SecurityException) {
-                e.printStackTrace()
-                handler.post {
-                    Toast.makeText(
-                        context,
-                        "녹음 권한이 없습니다",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                return@Runnable
+                isRecording = false
+                return@Thread
             }
+            audioRecord = rec
 
-            val audioBuffer = ShortArray(1024)  // 작은 청크로 연속 읽기
-            while (true) {
-                val read = recorder.read(audioBuffer, 0, 1024)
-                if (read > 0) {
-                    val audioFloat = FloatArray(read)
-                    for (i in 0 until read) {
-                        audioFloat[i] = audioBuffer[i] / 32768f
+            val audioBuffer = ShortArray(1024)
+            try {
+                while (isRecording) {
+                    val read = rec.read(audioBuffer, 0, 1024)
+                    if (read > 0) {
+                        val audioFloat = FloatArray(read) { audioBuffer[it] / 32768f }
+                        addToBuffers(audioFloat)
+                        processBuffersIfReady()
                     }
-                    // 각 모델 버퍼에 추가
-                    addToBuffers(audioFloat)
-                    // 버퍼가 준비되면 처리
-                    processBuffersIfReady()
                 }
+            } finally {
+                try { rec.stop() } catch (_: IllegalStateException) {}
+                rec.release()
+                audioRecord = null
             }
-        }).start()
+        }.also { it.start() }
     }
+
+    fun stopRecording() {
+        isRecording = false          // 루프가 끝나면 finally에서 stop/release
+        Log.d("Recording status", "녹음 중지")
+    }
+
 
     private fun addToBuffers(audioFloat: FloatArray) {
         // 모델1 버퍼 (3초)
@@ -131,7 +184,7 @@ class AudioRecorder(private val context: Context) {
             intent.setPackage(context.packageName)
             intent.putExtra("result1", result)
             context.sendBroadcast(intent)
-
+            Log.d("Value Detection", "모델1에 들어온 userBpm 값: $userBpm")
             Log.d("AudioRecorder", "모델1 결과: $result")
         } catch (e: IOException) {
             Log.e("AudioRecorder", "모델1 처리 오류", e)

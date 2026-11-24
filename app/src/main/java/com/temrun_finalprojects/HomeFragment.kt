@@ -18,7 +18,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
-import com.temrun_finalprojects.breathing.audio.AudioRecorder
 
 class HomeFragment : Fragment() {
 
@@ -27,7 +26,6 @@ class HomeFragment : Fragment() {
     private var cadenceValue = 150
     private var total = 0
 
-    private var recorder: AudioRecorder? = null
     // 멤버로 보관하면 나중에 stop() 가능
     private var metronome: Metronome? = null
 
@@ -158,8 +156,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        recorder = AudioRecorder(requireContext())
-
         val btnBpmVibe = view.findViewById<Button>(R.id.btn_bpm_vibe)
         btnBpmVibe?.setOnClickListener {
             // 현재 선택된 cadenceValue 기준으로 8박, 박자당 35ms 진동
@@ -183,8 +179,11 @@ class HomeFragment : Fragment() {
                 else -> "1_1" // 기본값
             }
 
-            // 오디오 리코딩 시작
-            recorder?.startRecording()
+//            // "2_1" → intArrayOf(2, 1)
+//            val breathArray: IntArray = selectedBreath
+//                .split("_")
+//                .mapNotNull { it.trim().toIntOrNull() }
+//                .toIntArray()
 
             // MainActivity로 이동 (bpm 값,모드,시간만 넘김)
             val intent = Intent(this.context, MainActivity::class.java)

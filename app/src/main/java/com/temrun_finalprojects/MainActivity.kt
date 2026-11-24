@@ -1,14 +1,10 @@
 package com.temrun_finalprojects
 
 import android.Manifest
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
+import com.temrun_finalprojects.perf.PerfMonitor
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
@@ -20,11 +16,9 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.*
-import android.telecom.VideoProfile.isPaused
 import android.util.Log
 import android.view.View
 import android.view.ViewTreeObserver
-import android.view.animation.AccelerateInterpolator
 import android.webkit.*
 import android.widget.FrameLayout
 import android.widget.ImageButton
@@ -37,11 +31,9 @@ import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.content.ContextCompat.getSystemService
-import androidx.core.content.ContextCompat.registerReceiver
 import com.skyfishjy.library.RippleBackground
 import com.temrun_finalprojects.breathing.audio.FeedbackTTS
-import com.prolificinteractive.materialcalendarview.BuildConfig
+import com.temrun_finalprojects.breathing.audio.AudioRecorder
 import com.temrun_finalprojects.data.Song
 import com.temrun_finalprojects.result.ResultActivity
 import kotlinx.coroutines.*
@@ -109,6 +101,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private var isPaused = false
     private var currentBpm = 0
+
+    private var audioRecorder: AudioRecorder? = null
 
     // 애니메이션 관련 변수
     data class RingHolder(val view: ImageView, var isAnimating: Boolean = false)
@@ -264,9 +258,14 @@ override fun onCreate(savedInstanceState: Bundle?) {
 
     // Home에서 넘어온 값 로그 출력
     val mode = intent.getStringExtra("mode")
-    val breath = intent.getStringExtra("breath")
+    val breath = intent.getStringExtra("breath") ?: "1_1"
     val cadence = intent.getIntExtra("cadence", -1)
     val time = intent.getIntExtra("time", -1)
+
+    audioRecorder = AudioRecorder(this).apply {
+        setUserSettings(cadence, breath)   // 앞서 만든 문자열 오버로드
+        startRecording()
+    }
 
     Log.d("MainActivity/Intent", "mode = $mode, breath = $breath, cadence = $cadence, time = $time")
 
@@ -301,6 +300,9 @@ override fun onCreate(savedInstanceState: Bundle?) {
 
         // *** 추가: 케이던스 루프 즉시 중지
         cadenceHandler.removeCallbacks(cadenceRunnable) // ***
+
+        // 호흡피드백 녹음 중지
+        audioRecorder?.stopRecording()
 
         // 2) 전달할 값 스냅샷
         val songsToSend = ArrayList(playedTracks)
@@ -378,6 +380,9 @@ override fun onCreate(savedInstanceState: Bundle?) {
     breathingFeedbackTTS = FeedbackTTS(this) {
         Log.d("MainActivity/TTS", "TTS 초기화 완료")
     }
+
+    // 성늘 모니터링
+    PerfMonitor.stopSession()
 }
 
 // 달린 시간 관련 함수 -----------------------------------------
@@ -854,6 +859,9 @@ override fun onDestroy() {
     super.onDestroy()
     breathingFeedbackTTS?.destroy()
     unregisterPredictionReceiverIfNeeded()
+
+    // 녹음 중지 안전장치 추가
+    audioRecorder?.stopRecording()
 
     // *** 추가: 실행기 중지 (대기 작업 즉시 취소)
     executor.shutdownNow() // ***

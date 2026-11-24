@@ -2,7 +2,7 @@ package com.temrun_finalprojects.breathing.audio
 
 import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.AudioEvent
-import be.tarsos.dsp.AudioProcessor
+import be.tarsos.dsp.AudioProcessor as TarsosAudioProcessor
 import be.tarsos.dsp.io.TarsosDSPAudioFormat
 import be.tarsos.dsp.io.UniversalAudioInputStream
 import be.tarsos.dsp.mfcc.MFCC
@@ -12,8 +12,6 @@ import java.io.ByteArrayInputStream
 import kotlin.math.*
 
 abstract class AudioProcessor {
-    abstract fun processingFinished()
-
     class FeatureSet {
         lateinit var mfccFrames: Array<FloatArray>
         lateinit var rmsFrames: FloatArray
@@ -23,7 +21,6 @@ abstract class AudioProcessor {
         //        public float bpm;
         //        public float[] breathingPattern; // ✅ float 하나 대신 배열
     }
-
     // LogMelSpectrogram 클래스를 내부 클래스로 추가
     class LogMelSpectrogram(
         private val sampleRate: Int = 16000,
@@ -197,7 +194,7 @@ abstract class AudioProcessor {
             val mfccList: MutableList<FloatArray> = ArrayList()
             val rmsList: MutableList<Float> = ArrayList()
 
-            dispatcher.addAudioProcessor(object : AudioProcessor {
+            dispatcher.addAudioProcessor(object : TarsosAudioProcessor {
                 override fun process(audioEvent: AudioEvent): Boolean {
                     val buffer = audioEvent.floatBuffer
 
@@ -251,5 +248,4 @@ abstract class AudioProcessor {
             return features
         }
     }
-
 }

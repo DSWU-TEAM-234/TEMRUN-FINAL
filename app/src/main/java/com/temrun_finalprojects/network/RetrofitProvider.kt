@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitProvider {
     // TODO: ngrok/서버 주소로 교체
-    private const val BASE_URL = "https://86ac10fffdb1.ngrok-free.app"
+    private const val BASE_URL = "https://b0302946a8ec.ngrok-free.app"
 
     private val client by lazy {
         val log = HttpLoggingInterceptor().apply {
