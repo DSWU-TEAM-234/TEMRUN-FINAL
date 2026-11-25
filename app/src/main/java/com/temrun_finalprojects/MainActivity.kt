@@ -1,7 +1,6 @@
 package com.temrun_finalprojects
 
 import android.Manifest
-import com.temrun_finalprojects.perf.PerfMonitor
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -53,6 +52,8 @@ import kotlin.math.roundToInt
 import kotlin.math.sqrt
 import com.temrun_finalprojects.data.BreathResultCount
 import com.temrun_finalprojects.config.ApiConfig
+import android.os.SystemClock
+import com.temrun_finalprojects.perf.PerfMonitor as PerfMonitor
 
 
 // 칼만 필터 클래스 정의
@@ -361,8 +362,9 @@ override fun onCreate(savedInstanceState: Bundle?) {
         }
         startActivity(intent)
 
+        // 모니터링 중지
+        PerfMonitor.stopSession()
     }
-
 
     // 달린 시간
     timeTextView = findViewById(R.id.timeText)
@@ -381,8 +383,9 @@ override fun onCreate(savedInstanceState: Bundle?) {
         Log.d("MainActivity/TTS", "TTS 초기화 완료")
     }
 
-    // 성늘 모니터링
-    PerfMonitor.stopSession()
+    // 모니터링 시작
+    // 시나리오별로 뒤에 라벨 붙이기
+    PerfMonitor.startSession(this, "runs-test-1-261125")
 }
 
 // 달린 시간 관련 함수 -----------------------------------------
