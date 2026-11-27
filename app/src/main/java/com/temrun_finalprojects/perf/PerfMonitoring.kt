@@ -258,7 +258,10 @@ object PerfMonitor {
 
     private fun saveCsv(ctx: Context) {
         try {
-            val dir = ctx.getExternalFilesDir(null) ?: ctx.filesDir
+//            val dir = ctx.getExternalFilesDir(null) ?: ctx.filesDir
+            val dir = android.os.Environment.getExternalStoragePublicDirectory(
+                android.os.Environment.DIRECTORY_DOWNLOADS
+            )
             val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
 
             val battery = File(dir, "perf_${label}_${ts}_battery.csv")
