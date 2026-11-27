@@ -197,6 +197,11 @@ private var refreshToken: String? = null
 
 private val predictionReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
+        // 호흡 결과 지연 확인하기
+        val sendAt = intent?.getLongExtra("sentAt", 0L) ?: 0L
+        if (sendAt > 0) {
+            PerfMonitor.record("breath_delay", (SystemClock.elapsedRealtime() - sendAt).toDouble())
+        }
         val result1 = intent?.getStringExtra("result1")
         val result2 = intent?.getStringExtra("resultToTts")
 
@@ -730,18 +735,28 @@ private fun spawnOneShotRipple() {
 
 // 케이던스 예측 루프 -----------------------------------------
 private var lastVibrationTime = 0L
+private var lastLoopMs = 0L // PERF
 private val cadenceRunnable = object : Runnable {
     override fun run() {
+        val nowMs = SystemClock.elapsedRealtime() // PERF: 루프 간격이 1000ms에서 얼마나 벗어나는지 확인
+        if (lastLoopMs != 0L) {
+            PerfMonitor.record("cadence_loop_interval", (nowMs - lastLoopMs).toDouble())
+            lastLoopMs = nowMs
+        }
+
         val currentTime = System.currentTimeMillis()
         val windowStart = currentTime - windowSizeMillis
-
         val recentData = sensorBuffer.filter { it.first in windowStart..currentTime }
         sensorBuffer.removeAll { it.first < windowStart }
 
         Log.d("버퍼", "최근 센서 크기: ${recentData.size}")
 
         if (recentData.isNotEmpty()) {
+            // TODO: 변수명 바꾸기
+            // PERF
+            val ns = PerfMonitor.start()
             executor.execute {
+                PerfMonitor.end("cadence_queue_wait", ns) // PERF: 실행 대기 시간
                 val sensorDataMap = mutableMapOf<String, MutableList<Float>>()
 
                 for ((_, type, values) in recentData) {
@@ -752,13 +767,17 @@ private val cadenceRunnable = object : Runnable {
                     }
                 }
 
+                val tPre = PerfMonitor.start()
                 val preprocessStart = System.currentTimeMillis()
                 val inputBuffer = convertGraphsToModelInput(sensorDataMap)
                 val preprocessEnd = System.currentTimeMillis()
                 Log.d("TIME", "전처리 시간: ${preprocessEnd - preprocessStart}ms")
 
+                PerfMonitor.end("cadence_process", tPre)
+
                 val inferenceStart = System.currentTimeMillis()
                 val output = Array(1) { FloatArray(1) }
+                val tInf = PerfMonitor.start()
 //                tflite?.run(inputBuffer, output)
 
                 // *** 추가: 닫힘/널 방어 + 동기화 + 예외 처리
@@ -771,6 +790,8 @@ private val cadenceRunnable = object : Runnable {
                     Log.w("TFLite", "Interpreter already closed. skip inference.", e) // ***
                     return@execute // ***
                 } // ***
+
+                PerfMonitor.end("cadence_inference", tInf)
 
                 val inferenceEnd = System.currentTimeMillis()
                 Log.d("TIME", "모델 추론 시간: ${inferenceEnd - inferenceStart}ms")
@@ -822,6 +843,9 @@ private val cadenceRunnable = object : Runnable {
                     } else {
                         cadenceFrame.setBackgroundResource(R.drawable.ic_cadence_green)
                     }
+
+                    PerfMonitor.end("cadence_total", ns)
+//                    cadenceTextView.text = "$finalPrediction"
                 }
             }
         }
