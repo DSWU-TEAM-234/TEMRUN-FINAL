@@ -7,11 +7,13 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.Handler
+import android.os.SystemClock
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import com.temrun_finalprojects.MainActivity
 import com.temrun_finalprojects.breathing.model.ModelInterpreter
+import com.temrun_finalprojects.perf.PerfMonitor
 import java.io.IOException
 
 class AudioRecorder(private val context: Context) {
@@ -115,11 +117,17 @@ class AudioRecorder(private val context: Context) {
             val audioBuffer = ShortArray(1024)
             try {
                 while (isRecording) {
+                    /*
+                    * 녹음 청크를 처리하는데 64MS를 넘지 않도록 체크
+                    * 64를 넘기면 녹음을 따라가지 못하는 것이라고 판단하기
+                    * */
                     val read = rec.read(audioBuffer, 0, 1024)
                     if (read > 0) {
+                        val tChunk = PerfMonitor.start() // PERF
                         val audioFloat = FloatArray(read) { audioBuffer[it] / 32768f }
                         addToBuffers(audioFloat)
                         processBuffersIfReady()
+                        PerfMonitor.end("audio_chunk_process", tChunk) // PERF
                     }
                 }
             } finally {
@@ -174,20 +182,29 @@ class AudioRecorder(private val context: Context) {
 
 
     private fun processModel1(audioData: FloatArray) {
+        val tTotal = PerfMonitor.start() // PERF
         try {
+            val tFeat = PerfMonitor.start() // PERF
             val features = AudioProcessor.extractFeaturesForModel1(audioData)
+            PerfMonitor.end("breath_m1_features", tFeat) // PERF
+
             val sanitizedPattern = userPattern.replace(":", "_")
+            val tInf = PerfMonitor.start() // PERF
             val result = ModelInterpreter.runModel1(context, features, userBpm, sanitizedPattern)
+            PerfMonitor.end("breath_m1_inference", tInf) // PERF
 
             // 기존 브로드캐스트 로직...
             val intent = Intent("PREDICTION_UPDATE")
             intent.setPackage(context.packageName)
             intent.putExtra("result1", result)
+            intent.putExtra("sendAt", SystemClock.elapsedRealtime()) // PERF
             context.sendBroadcast(intent)
             Log.d("Value Detection", "모델1에 들어온 userBpm 값: $userBpm")
             Log.d("AudioRecorder", "모델1 결과: $result")
         } catch (e: IOException) {
             Log.e("AudioRecorder", "모델1 처리 오류", e)
+        } finally {
+            PerfMonitor.end("breath_m1_total", tTotal) // PERF
         }
     }
 
@@ -209,6 +226,11 @@ class AudioRecorder(private val context: Context) {
         }
     }
 
+    /*
+    * TODO:
+    *  stage1, stage2 최근에 수치 바껴서
+    *  해당 부분 값 수정하기
+    * */
     companion object {
         private const val SAMPLE_RATE = 16000
         // 모델1: 3초 → 48,000 샘플
