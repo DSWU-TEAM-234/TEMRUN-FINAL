@@ -209,20 +209,27 @@ class AudioRecorder(private val context: Context) {
     }
 
     private fun processModel2(audioData: FloatArray) {
+        val tTotal = PerfMonitor.start() // PERF
         try {
+            val tFeat = PerfMonitor.start() // PERF
             val features = AudioProcessor.extractFeaturesForModel2(audioData)
+            PerfMonitor.end("breath_m2_features", tFeat) // PERF
+            val tInf = PerfMonitor.start() // PERF
             val result = ModelInterpreter.runModel2(context, features, userBpm, userBreathingPattern)
-
+            PerfMonitor.end("breath_m2_inference", tInf) // PERF
             // 기존 브로드캐스트 로직...
             val intent = Intent("PREDICTION_UPDATE")
             intent.setPackage(context.packageName)
             intent.putExtra("resultToTts", result)
+            intent.putExtra("sendAt", SystemClock.elapsedRealtime()) // PERF
             context.sendBroadcast(intent)
 
             Log.d("AudioRecorder", "모델2 결과: $result")
             ModelInterpreter.resetAbnormalCount()
         } catch (e: IOException) {
             Log.e("AudioRecorder", "모델2 처리 오류", e)
+        } finally {
+            PerfMonitor.end("breath_m2_total", tTotal) // PERF
         }
     }
 
